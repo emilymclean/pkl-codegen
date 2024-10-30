@@ -9,6 +9,11 @@ local checkout = new ActionStep {
 
 local fatJars = List("java", "kotlin")
 
+local dockerPermissions = new Mapping {
+    ["contents"] = "read"
+    ["packages"] = "write"
+}
+
 local function buildFatJarJob(dir: String): Job = new Job {
     needs = new Listing {
         "version"
@@ -17,10 +22,7 @@ local function buildFatJarJob(dir: String): Job = new Job {
     strategy = new JobStrategy {
         matrix = "${{fromJson(needs.pkl-versions.outputs.versions)}}"
     }
-    permissions = new Mapping {
-        ["contents"] = "read"
-        ["packages"] = "write"
-    }
+    permissions = dockerPermissions
     steps = (new Listing {
         checkout
         new ActionStep {
@@ -184,5 +186,30 @@ jobs = new Mapping {
     }
     for (fj in fatJars) {
         ["build-\(fj)"] = buildFatJarJob(fj)
+    }
+    ["build-swift"] = new Job {
+        needs = new Listing {
+            "version"
+            "pkl-versions"
+        }
+        strategy = new JobStrategy {
+            matrix = "${{fromJson(needs.pkl-versions.outputs.versions)}}"
+        }
+        permissions = dockerPermissions
+        steps = (new Listing {
+            checkout
+            new ActionStep {
+                name = "Render template.Dockerfile"
+                uses = "recih/template-render-action@v1.0.2"
+                env = new Mapping {
+                    ["pkl_version"] = "${{ matrix.version }}"
+                }
+                with = new Mapping {
+                    ["template-file"] = "swift/template.Dockerfile"
+                    ["output-file"] = "swift/Dockerfile"
+                    ["engine"] = "mustache"
+                }
+            }
+        }.toList() + docker("swift").toList()).toListing()
     }
 }.toMap().filter((k,v) -> v != null).toMapping()
