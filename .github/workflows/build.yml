@@ -64,7 +64,7 @@ jobs:
         json=$(jq -n -c --argjson arr "$(printf '%s
         ' "${pklversions[@]}" | jq -R . | jq -s .)" '{"version": $arr}')
         echo "versions=$(echo "$json")" >> ${GITHUB_ENV}
-  java:
+  build-java:
     needs:
     - version
     - pkl-versions
@@ -115,9 +115,9 @@ jobs:
         platforms: linux/amd64
         push: true
         tags: |-
-          ghcr.io/${{ env.REPOSITORY_LC }}/java:${{ matrix.version }}
-          ghcr.io/${{ env.REPOSITORY_LC }}/java:${{ matrix.version }}-${{ needs.version.outputs.version }}
-  kotlin:
+          ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}
+          ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}-${{ needs.version.outputs.version }}
+  build-kotlin:
     needs:
     - version
     - pkl-versions
@@ -168,5 +168,5 @@ jobs:
         platforms: linux/amd64
         push: true
         tags: |-
-          ghcr.io/${{ env.REPOSITORY_LC }}/kotlin:${{ matrix.version }}
-          ghcr.io/${{ env.REPOSITORY_LC }}/kotlin:${{ matrix.version }}-${{ needs.version.outputs.version }}
+          ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}
+          ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}-${{ needs.version.outputs.version }}

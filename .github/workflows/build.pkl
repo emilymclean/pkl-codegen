@@ -179,6 +179,6 @@ jobs = new Mapping {
         }
     }
     for (fj in fatJars) {
-        [fj] = buildFatJarJob(fj)
+        ["build-\(fj)"] = buildFatJarJob(fj)
     }
 }.toMap().filter((k,v) -> v != null).toMapping()
