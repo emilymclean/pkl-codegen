@@ -108,8 +108,8 @@ jobs:
         platforms: linux/amd64
         push: true
         tags: |-
-          ghcr.io/${{ env.REPOSITORY_LC }}/java:${{ matrix.version }}
-          ghcr.io/${{ env.REPOSITORY_LC }}/java:${{ matrix.version }}-${{ needs.version.outputs.version }}
+          ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}
+          ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}-${{ needs.version.outputs.version }}
     - name: Build and push develop Docker image
       if: github.ref != 'refs/heads/main'
       uses: docker/build-push-action@v4
@@ -162,8 +162,8 @@ jobs:
         platforms: linux/amd64
         push: true
         tags: |-
-          ghcr.io/${{ env.REPOSITORY_LC }}/java:${{ matrix.version }}
-          ghcr.io/${{ env.REPOSITORY_LC }}/java:${{ matrix.version }}-${{ needs.version.outputs.version }}
+          ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}
+          ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}-${{ needs.version.outputs.version }}
     - name: Build and push develop Docker image
       if: github.ref != 'refs/heads/main'
       uses: docker/build-push-action@v4
@@ -216,8 +216,8 @@ jobs:
         platforms: linux/amd64
         push: true
         tags: |-
-          ghcr.io/${{ env.REPOSITORY_LC }}/java:${{ matrix.version }}
-          ghcr.io/${{ env.REPOSITORY_LC }}/java:${{ matrix.version }}-${{ needs.version.outputs.version }}
+          ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}
+          ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}-${{ needs.version.outputs.version }}
     - name: Build and push develop Docker image
       if: github.ref != 'refs/heads/main'
       uses: docker/build-push-action@v4
