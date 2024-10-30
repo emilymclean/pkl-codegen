@@ -31,7 +31,7 @@ local function testPlatform(platform: String): Job = new Job {
         new Listing {
             new CommandStep {
                 run = """
-                docker run --rm -v "./test-data/:/data" test/\(platform):latest example.pkl example.out
+                docker run --rm -v "./test-data/:/data" test/\(platform):latest /data/example.pkl /data/example.out
                 ls test-data
                 """
             }
