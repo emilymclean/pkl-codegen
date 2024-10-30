@@ -65,6 +65,9 @@ jobs:
         ' "${pklversions[@]}" | jq -R . | jq -s .)" '{"version": $arr}')
         echo "versions=$(echo "$json")" >> ${GITHUB_ENV}
   build-java:
+    permissions:
+      contents: read
+      packages: write
     needs:
     - version
     - pkl-versions
@@ -118,6 +121,9 @@ jobs:
           ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}
           ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}-${{ needs.version.outputs.version }}
   build-kotlin:
+    permissions:
+      contents: read
+      packages: write
     needs:
     - version
     - pkl-versions

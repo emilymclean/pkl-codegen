@@ -17,6 +17,10 @@ local function buildFatJarJob(dir: String): Job = new Job {
     strategy = new JobStrategy {
         matrix = "${{fromJson(needs.pkl-versions.outputs.versions)}}"
     }
+    permissions = new Mapping {
+        ["contents"] = "read"
+        ["packages"] = "write"
+    }
     steps = (new Listing {
         checkout
         new ActionStep {
@@ -31,19 +35,19 @@ local function buildFatJarJob(dir: String): Job = new Job {
                 ["engine"] = "mustache"
             }
         }
-        new CommandStep {
-            name = "Lowercase repository name"
-            run = """
-            echo "REPOSITORY_LC=${REPOSITORY,,}" >> ${GITHUB_ENV}
-            """
-            env = new Mapping {
-                ["REPOSITORY"] = "${{ github.repository }}"
-            }
-        }
     }.toList() + docker(dir).toList()).toListing()
 }
 
 local function docker(dir: String): Listing = new Listing {
+    new CommandStep {
+        name = "Lowercase repository name"
+        run = """
+        echo "REPOSITORY_LC=${REPOSITORY,,}" >> ${GITHUB_ENV}
+        """
+        env = new Mapping {
+            ["REPOSITORY"] = "${{ github.repository }}"
+        }
+    }
     new ActionStep {
         name = "Setup QEMU"
         uses = "docker/setup-qemu-action@v2"
