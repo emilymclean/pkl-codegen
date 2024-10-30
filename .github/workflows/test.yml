@@ -1,0 +1,109 @@
+name: Test Java, Kotlin, and Swift Docker images on latest version
+'on':
+  pull_request:
+    branches:
+    - main
+    - develop
+jobs:
+  test-swift:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Render template.Dockerfile
+      env:
+        pkl_version: 0.26.3
+      uses: recih/template-render-action@v1.0.2
+      with:
+        template-file: swift/template.Dockerfile
+        output-file: swift/Dockerfile
+        engine: mustache
+    - name: Setup QEMU
+      uses: docker/setup-qemu-action@v2
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    - name: Log in to the Container registry
+      uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+      with:
+        registry: https://ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: swift
+        platforms: linux/amd64
+        load: true
+        tags: test/swift:latest
+    - run: |-
+        docker run --rm -v "./test-data/:/data" test/swift:latest example.pkl example.out
+        ls test-data
+  test-java:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Render build.template.gradle
+      env:
+        pkl_version: 0.26.3
+      uses: recih/template-render-action@v1.0.2
+      with:
+        template-file: java/project/build.template.gradle
+        output-file: java/project/build.gradle
+        engine: mustache
+    - name: Setup QEMU
+      uses: docker/setup-qemu-action@v2
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    - name: Log in to the Container registry
+      uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+      with:
+        registry: https://ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: java
+        platforms: linux/amd64
+        load: true
+        tags: test/java:latest
+    - run: |-
+        docker run --rm -v "./test-data/:/data" test/java:latest example.pkl example.out
+        ls test-data
+  test-kotlin:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Render build.template.gradle
+      env:
+        pkl_version: 0.26.3
+      uses: recih/template-render-action@v1.0.2
+      with:
+        template-file: kotlin/project/build.template.gradle
+        output-file: kotlin/project/build.gradle
+        engine: mustache
+    - name: Setup QEMU
+      uses: docker/setup-qemu-action@v2
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    - name: Log in to the Container registry
+      uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+      with:
+        registry: https://ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: kotlin
+        platforms: linux/amd64
+        load: true
+        tags: test/kotlin:latest
+    - run: |-
+        docker run --rm -v "./test-data/:/data" test/kotlin:latest example.pkl example.out
+        ls test-data

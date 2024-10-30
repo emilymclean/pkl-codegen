@@ -1,4 +1,4 @@
-name: Build App
+name: Build Java, Kotlin, and Swift Docker images
 'on':
   push:
     branches:
@@ -100,22 +100,22 @@ jobs:
         registry: https://ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build and push main Docker image
+    - name: Build and push Docker image
       if: github.ref == 'refs/heads/main'
       uses: docker/build-push-action@v4
       with:
         context: java
-        platforms: linux/amd64
+        platforms: linux/amd64,linux/arm64/v8
         push: true
         tags: |-
           ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}
           ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}-${{ needs.version.outputs.version }}
-    - name: Build and push develop Docker image
+    - name: Build and push Docker image
       if: github.ref != 'refs/heads/main'
       uses: docker/build-push-action@v4
       with:
         context: java
-        platforms: linux/amd64
+        platforms: linux/amd64,linux/arm64/v8
         push: true
         tags: ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}-${{ needs.version.outputs.version }}
   build-kotlin:
@@ -154,22 +154,22 @@ jobs:
         registry: https://ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build and push main Docker image
+    - name: Build and push Docker image
       if: github.ref == 'refs/heads/main'
       uses: docker/build-push-action@v4
       with:
         context: kotlin
-        platforms: linux/amd64
+        platforms: linux/amd64,linux/arm64/v8
         push: true
         tags: |-
           ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}
           ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}-${{ needs.version.outputs.version }}
-    - name: Build and push develop Docker image
+    - name: Build and push Docker image
       if: github.ref != 'refs/heads/main'
       uses: docker/build-push-action@v4
       with:
         context: kotlin
-        platforms: linux/amd64
+        platforms: linux/amd64,linux/arm64/v8
         push: true
         tags: ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}-${{ needs.version.outputs.version }}
   build-swift:
@@ -208,21 +208,21 @@ jobs:
         registry: https://ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build and push main Docker image
+    - name: Build and push Docker image
       if: github.ref == 'refs/heads/main'
       uses: docker/build-push-action@v4
       with:
         context: swift
-        platforms: linux/amd64
+        platforms: linux/amd64,linux/arm64/v8
         push: true
         tags: |-
           ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}
           ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}-${{ needs.version.outputs.version }}
-    - name: Build and push develop Docker image
+    - name: Build and push Docker image
       if: github.ref != 'refs/heads/main'
       uses: docker/build-push-action@v4
       with:
         context: swift
-        platforms: linux/amd64
+        platforms: linux/amd64,linux/arm64/v8
         push: true
         tags: ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}-${{ needs.version.outputs.version }}
