@@ -90,7 +90,6 @@ local function docker(dir: String): Listing = new Listing {
             ["platforms"] = "linux/amd64"
             ["push"] = true
             ["tags"] = """
-            ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}
             ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.version }}
             """
         }

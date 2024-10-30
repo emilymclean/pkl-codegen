@@ -117,9 +117,7 @@ jobs:
         context: java
         platforms: linux/amd64
         push: true
-        tags: |-
-          ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}
-          ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}-${{ needs.version.outputs.version }}
+        tags: ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}-${{ needs.version.outputs.version }}
   build-kotlin:
     permissions:
       contents: read
@@ -173,9 +171,7 @@ jobs:
         context: kotlin
         platforms: linux/amd64
         push: true
-        tags: |-
-          ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}
-          ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}-${{ needs.version.outputs.version }}
+        tags: ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}-${{ needs.version.outputs.version }}
   build-swift:
     permissions:
       contents: read
@@ -229,6 +225,4 @@ jobs:
         context: swift
         platforms: linux/amd64
         push: true
-        tags: |-
-          ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}
-          ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}-${{ needs.version.outputs.version }}
+        tags: ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}-${{ needs.version.outputs.version }}
