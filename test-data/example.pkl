@@ -1,0 +1,8 @@
+
+class Message {
+    content: String
+}
+
+message = new Message {
+    content = "Hello World!"
+}
