@@ -8,7 +8,7 @@ function dockerBuild(dir: String, ifStatement: String?, tags: String, push: Bool
         `if` = ifStatement
         with = new Mapping {
             ["context"] = dir
-            ["platforms"] = "linux/amd64"
+            ["platforms"] = "linux/amd64,linux/arm64/v8"
             ["push"] = push
             ["load"] = load
             ["tags"] = tags
