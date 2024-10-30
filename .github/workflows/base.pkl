@@ -1,18 +1,12 @@
 open module base
 extends "package://github.com/emilymclean/pkl-github-actions/releases/download/v0.1.0-alpha.96/pkl-github-actions@0.1.0-alpha.96#/actions.pkl"
 
-function dockerBuild(dir: String, ifStatement: String?, tags: String, push: Boolean, load: Boolean): Listing = new Listing {
+function dockerBuild(withM: Mapping, ifStatement: String?): Listing = new Listing {
     new ActionStep {
         name = "Build and push Docker image"
         uses = "docker/build-push-action@v4"
         `if` = ifStatement
-        with = new Mapping {
-            ["context"] = dir
-            ["platforms"] = "linux/amd64,linux/arm64/v8"
-            ["push"] = push
-            ["load"] = load
-            ["tags"] = tags
-        }
+        with = withM
     }
 }
 

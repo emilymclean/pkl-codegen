@@ -18,13 +18,15 @@ local function testPlatform(platform: String): Job = new Job {
         }.toList() +
         base.dockerSetup().toList() +
         base.dockerBuild(
-            platform, 
-            null, 
-            """
-            test/\(platform):latest
-            """,
-            false,
-            true
+            new Mapping {
+                ["context"] = platform
+                ["platforms"] = "linux/amd64"
+                ["load"] = true
+                ["tags"] = """
+                test/\(platform):latest
+                """
+            },
+            null
         ).toList() +
         new Listing {
             new CommandStep {

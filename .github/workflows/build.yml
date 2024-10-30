@@ -107,7 +107,6 @@ jobs:
         context: java
         platforms: linux/amd64,linux/arm64/v8
         push: true
-        load: false
         tags: |-
           ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}
           ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}-${{ needs.version.outputs.version }}
@@ -118,7 +117,6 @@ jobs:
         context: java
         platforms: linux/amd64,linux/arm64/v8
         push: true
-        load: false
         tags: ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}-${{ needs.version.outputs.version }}
   build-kotlin:
     permissions:
@@ -163,7 +161,6 @@ jobs:
         context: kotlin
         platforms: linux/amd64,linux/arm64/v8
         push: true
-        load: false
         tags: |-
           ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}
           ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}-${{ needs.version.outputs.version }}
@@ -174,7 +171,6 @@ jobs:
         context: kotlin
         platforms: linux/amd64,linux/arm64/v8
         push: true
-        load: false
         tags: ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}-${{ needs.version.outputs.version }}
   build-swift:
     permissions:
@@ -219,7 +215,6 @@ jobs:
         context: swift
         platforms: linux/amd64,linux/arm64/v8
         push: true
-        load: false
         tags: |-
           ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}
           ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}-${{ needs.version.outputs.version }}
@@ -230,5 +225,4 @@ jobs:
         context: swift
         platforms: linux/amd64,linux/arm64/v8
         push: true
-        load: false
         tags: ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}-${{ needs.version.outputs.version }}

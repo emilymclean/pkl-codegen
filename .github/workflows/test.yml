@@ -33,8 +33,7 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         context: swift
-        platforms: linux/amd64,linux/arm64/v8
-        push: false
+        platforms: linux/amd64
         load: true
         tags: test/swift:latest
     - run: |-
@@ -68,8 +67,7 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         context: java
-        platforms: linux/amd64,linux/arm64/v8
-        push: false
+        platforms: linux/amd64
         load: true
         tags: test/java:latest
     - run: |-
@@ -103,8 +101,7 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         context: kotlin
-        platforms: linux/amd64,linux/arm64/v8
-        push: false
+        platforms: linux/amd64
         load: true
         tags: test/kotlin:latest
     - run: |-

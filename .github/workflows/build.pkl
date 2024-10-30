@@ -44,24 +44,28 @@ local function docker(dir: String): Listing = (
      }.toList() + 
      base.dockerSetup().toList() +
      base.dockerBuild(
-        dir, 
-        "github.ref == 'refs/heads/main'", 
-        """
-        ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}
-        ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.version }}
-        """,
-        true,
-        false
-    ).toList() +
-    base.dockerBuild(
-        dir, 
-        "github.ref != 'refs/heads/main'", 
-        """
-        ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.version }}
-        """,
-        true,
-        false
-    ).toList()
+        new Mapping {
+            ["context"] = dir
+            ["platforms"] = "linux/amd64,linux/arm64/v8"
+            ["push"] = true
+            ["tags"] = """
+            ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}
+            ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.version }}
+            """
+        },
+        "github.ref == 'refs/heads/main'"
+     ).toList() +
+     base.dockerBuild(
+        new Mapping {
+            ["context"] = dir
+            ["platforms"] = "linux/amd64,linux/arm64/v8"
+            ["push"] = true
+            ["tags"] = """
+            ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.version }}
+            """
+        },
+        "github.ref != 'refs/heads/main'"
+     ).toList()
 ).toListing()
 
 name = "Build Java, Kotlin, and Swift Docker images"
