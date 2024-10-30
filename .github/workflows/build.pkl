@@ -1,0 +1,175 @@
+amends "package://github.com/emilymclean/pkl-github-actions/releases/download/v0.1.0-alpha.96/pkl-github-actions@0.1.0-alpha.96#/actions.pkl"
+import "base.pkl"
+
+local checkout = new ActionStep {
+    uses = "actions/checkout@v3"
+    with = new Mapping {
+        ["fetch-depth"] = 0
+    }
+}
+
+local fatJars = List("java", "kotlin")
+
+local dockerPermissions = new Mapping {
+    ["contents"] = "read"
+    ["packages"] = "write"
+}
+
+local function buildFatJarJob(dir: String): Job = new Job {
+    needs = new Listing {
+        "version"
+        "pkl-versions"
+    }
+    strategy = new JobStrategy {
+        matrix = "${{fromJson(needs.pkl-versions.outputs.versions)}}"
+    }
+    permissions = dockerPermissions
+    steps = (new Listing {
+        checkout
+        base.renderForPlatform(dir, "${{ matrix.version }}")
+    }.toList() + docker(dir).toList()).toListing()
+}
+
+local function docker(dir: String): Listing = (
+    new Listing {
+        new CommandStep {
+            name = "Lowercase repository name"
+            run = """
+            echo "REPOSITORY_LC=${REPOSITORY,,}" >> ${GITHUB_ENV}
+            """
+            env = new Mapping {
+                ["REPOSITORY"] = "${{ github.repository }}"
+            }
+        }
+     }.toList() + 
+     base.dockerSetup().toList() +
+     base.dockerBuild(
+        new Mapping {
+            ["context"] = dir
+            ["platforms"] = "linux/amd64,linux/arm64/v8"
+            ["push"] = true
+            ["tags"] = """
+            ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}
+            ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.version }}
+            """
+        },
+        "github.ref == 'refs/heads/main'"
+     ).toList() +
+     base.dockerBuild(
+        new Mapping {
+            ["context"] = dir
+            ["platforms"] = "linux/amd64,linux/arm64/v8"
+            ["push"] = true
+            ["tags"] = """
+            ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.version }}
+            """
+        },
+        "github.ref != 'refs/heads/main'"
+     ).toList()
+).toListing()
+
+name = "Build Java, Kotlin, and Swift Docker images"
+
+on = new On {
+    push = new Push {
+        branches = new Listing {
+            "main"
+            "develop"
+        }
+    }
+}
+
+permissions = new Mapping {
+    ["contents"] = "write"
+}
+
+jobs = new Mapping {
+    ["version"] = new Job {
+        outputs = new Mapping {
+            ["version"] = "${{ steps.gitversion.outputs.semVer }}"
+        }
+        steps = new Listing {
+            checkout
+            new ActionStep {
+                name = "Install GitVersion"
+                uses = "gittools/actions/gitversion/setup@v0.9.6"
+                with = new Mapping {
+                    ["versionSpec"] = "5.x"
+                }
+            }
+            new ActionStep {
+                name = "Use GitVersion"
+                id = "gitversion"
+                uses = "gittools/actions/gitversion/execute@v0.9.6"
+                with = new Mapping {
+                    ["useConfigFile"] = true
+                    ["configFilePath"] = "./gitversion.yml"
+                }
+            }
+            new CommandStep {
+                name = "Generate Job Summary"
+                run = "echo \"# Version Info\nSemantic Version: ${{ steps.gitversion.outputs.semVer }}\" >> $GITHUB_STEP_SUMMARY"
+            }
+        }
+    }
+    ["release"] = new Job {
+        needs = new Listing {
+            "version"
+        }
+        `if` = "github.event_name != 'pull_request'"
+        permissions = new Mapping {
+            ["contents"] = "write"
+        }
+        outputs = new Mapping {
+            ["upload_url"] = "${{ steps.create_release.outputs.upload_url }}"
+        }
+        steps = new Listing {
+            checkout
+            new ActionStep {
+                id = "create_release"
+                uses = "actions/create-release@v1"
+                env = new Mapping {
+                    ["GITHUB_TOKEN"] = "${{ secrets.GITHUB_TOKEN }}"
+                }
+                with = new Mapping {
+                    ["tag_name"] = "v${{ needs.version.outputs.version }}"
+                    ["release_name"] = "Release ${{ needs.version.outputs.version }}"
+                    ["draft"] = false
+                    ["prerelease"] = "${{ github.ref == 'refs/heads/develop' }}"
+                }
+            }
+        }
+    }
+    ["pkl-versions"] = new Job {
+        outputs = new Mapping {
+            ["versions"] = "${{ env.versions }}"
+        }
+        steps = new Listing {
+            checkout
+            new CommandStep {
+                run = """
+                mapfile -t pklversions < "pkl-versions"
+                json=$(jq -n -c --argjson arr "$(printf '%s\n' "${pklversions[@]}" | jq -R . | jq -s .)" '{"version": $arr}')
+                echo "versions=$(echo "$json")" >> ${GITHUB_ENV}
+                """
+            }
+        }
+    }
+    for (fj in fatJars) {
+        ["build-\(fj)"] = buildFatJarJob(fj)
+    }
+    ["build-swift"] = new Job {
+        needs = new Listing {
+            "version"
+            "pkl-versions"
+        }
+        strategy = new JobStrategy {
+            matrix = "${{fromJson(needs.pkl-versions.outputs.versions)}}"
+        }
+        permissions = dockerPermissions
+        steps = (new Listing {
+            checkout
+            base.renderForPlatform("swift", "${{ matrix.version }}")
+        }.toList() + docker("swift").toList()).toListing()
+    }
+}.toMap().filter((k,v) -> v != null).toMapping()

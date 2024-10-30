@@ -1,0 +1,58 @@
+amends "package://github.com/emilymclean/pkl-github-actions/releases/download/v0.1.0-alpha.96/pkl-github-actions@0.1.0-alpha.96#/actions.pkl"
+import "base.pkl"
+
+local checkout = new ActionStep {
+    uses = "actions/checkout@v3"
+    with = new Mapping {
+        ["fetch-depth"] = 0
+    }
+}
+
+local platforms = List("swift", "java", "kotlin")
+
+local function testPlatform(platform: String): Job = new Job {
+    steps = (
+        new Listing {
+            checkout
+            base.renderForPlatform(platform, "0.26.3")
+        }.toList() +
+        base.dockerSetup().toList() +
+        base.dockerBuild(
+            new Mapping {
+                ["context"] = platform
+                ["platforms"] = "linux/amd64"
+                ["load"] = true
+                ["tags"] = """
+                test/\(platform):latest
+                """
+            },
+            null
+        ).toList() +
+        new Listing {
+            new CommandStep {
+                run = """
+                docker run --rm -v "./test-data/:/data" test/\(platform):latest example.pkl example.out
+                ls test-data
+                """
+            }
+        }.toList()
+    ).toListing()
+}
+
+name = "Test Java, Kotlin, and Swift Docker images on latest version"
+
+on = new On {
+    pull_request = new PullRequest {
+        branches = new Listing {
+            "main"
+            "develop"
+        }
+    }
+}
+
+jobs = new Mapping {
+    for (platform in platforms) {
+        ["test-\(platform)"] = testPlatform(platform)
+    }
+}.toMap().filter((k,v) -> v != null).toMapping()
+
