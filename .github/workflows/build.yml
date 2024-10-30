@@ -105,7 +105,7 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         context: java
-        platforms: linux/amd64
+        platforms: linux/amd64,linux/arm64/v8
         push: true
         load: false
         tags: |-
@@ -116,7 +116,7 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         context: java
-        platforms: linux/amd64
+        platforms: linux/amd64,linux/arm64/v8
         push: true
         load: false
         tags: ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}-${{ needs.version.outputs.version }}
@@ -161,7 +161,7 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         context: kotlin
-        platforms: linux/amd64
+        platforms: linux/amd64,linux/arm64/v8
         push: true
         load: false
         tags: |-
@@ -172,7 +172,7 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         context: kotlin
-        platforms: linux/amd64
+        platforms: linux/amd64,linux/arm64/v8
         push: true
         load: false
         tags: ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}-${{ needs.version.outputs.version }}
@@ -217,7 +217,7 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         context: swift
-        platforms: linux/amd64
+        platforms: linux/amd64,linux/arm64/v8
         push: true
         load: false
         tags: |-
@@ -228,7 +228,7 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         context: swift
-        platforms: linux/amd64
+        platforms: linux/amd64,linux/arm64/v8
         push: true
         load: false
         tags: ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}-${{ needs.version.outputs.version }}
