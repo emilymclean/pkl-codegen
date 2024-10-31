@@ -1,13 +1,6 @@
 amends "package://github.com/emilymclean/pkl-github-actions/releases/download/v0.1.0-alpha.96/pkl-github-actions@0.1.0-alpha.96#/actions.pkl"
 import "base.pkl"
 
-local checkout = new ActionStep {
-    uses = "actions/checkout@v3"
-    with = new Mapping {
-        ["fetch-depth"] = 0
-    }
-}
-
 local fatJars = List("java", "kotlin")
 
 local dockerPermissions = new Mapping {
@@ -25,7 +18,7 @@ local function buildFatJarJob(dir: String): Job = new Job {
     }
     permissions = dockerPermissions
     steps = (new Listing {
-        checkout
+        base.checkout
         base.renderForPlatform(dir, "${{ matrix.version }}")
     }.toList() + docker(dir).toList()).toListing()
 }
@@ -50,6 +43,7 @@ local function docker(dir: String): Listing = (
             ["push"] = true
             ["tags"] = """
             ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}
+            ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-nightly
             ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.version }}
             """
         },
@@ -61,6 +55,7 @@ local function docker(dir: String): Listing = (
             ["platforms"] = "linux/amd64,linux/arm64/v8"
             ["push"] = true
             ["tags"] = """
+            ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-nightly
             ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.version }}
             """
         },
@@ -89,7 +84,7 @@ jobs = new Mapping {
             ["version"] = "${{ steps.gitversion.outputs.semVer }}"
         }
         steps = new Listing {
-            checkout
+            base.checkout
             new ActionStep {
                 name = "Install GitVersion"
                 uses = "gittools/actions/gitversion/setup@v0.9.6"
@@ -124,7 +119,7 @@ jobs = new Mapping {
             ["upload_url"] = "${{ steps.create_release.outputs.upload_url }}"
         }
         steps = new Listing {
-            checkout
+            base.checkout
             new ActionStep {
                 id = "create_release"
                 uses = "actions/create-release@v1"
@@ -145,7 +140,7 @@ jobs = new Mapping {
             ["versions"] = "${{ env.versions }}"
         }
         steps = new Listing {
-            checkout
+            base.checkout
             new CommandStep {
                 run = """
                 mapfile -t pklversions < "pkl-versions"
@@ -168,7 +163,7 @@ jobs = new Mapping {
         }
         permissions = dockerPermissions
         steps = (new Listing {
-            checkout
+            base.checkout
             base.renderForPlatform("swift", "${{ matrix.version }}")
         }.toList() + docker("swift").toList()).toListing()
     }
