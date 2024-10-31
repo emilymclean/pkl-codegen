@@ -50,6 +50,7 @@ local function docker(dir: String): Listing = (
             ["push"] = true
             ["tags"] = """
             ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}
+            ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-nightly
             ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.version }}
             """
         },
@@ -61,6 +62,7 @@ local function docker(dir: String): Listing = (
             ["platforms"] = "linux/amd64,linux/arm64/v8"
             ["push"] = true
             ["tags"] = """
+            ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-nightly
             ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.version }}
             """
         },
