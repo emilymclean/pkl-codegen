@@ -17,7 +17,7 @@ jobs:
     - name: Get current latest supported pkl version
       run: |-
         mapfile -t pklversions < "pkl-versions"
-        echo "PKL_VERSION=${array[-1]}" >> $GITHUB_ENV
+        echo "PKL_VERSION=${pklversions[-1]}" >> $GITHUB_ENV
     - id: pkl-release
       name: Get latest pkl version
       uses: pozetroninc/github-action-get-latest-release@master
@@ -45,7 +45,7 @@ jobs:
     - name: Update pkl-versions file with last 10 releases
       run: |-
         mapfile -t pklversions < "pkl-versions"
-        pklversions+="${{ needs.get-current-pkl-version.outputs.latest-version }}"
+        pklversions+=("${{ needs.get-current-pkl-version.outputs.latest-version }}")
         start_index=$(( ${#pklversions[@]} > 10 ? ${#pklversions[@]} - 10 : 0 ))
 
         printf "%s\n" "${pklversions[@]:$start_index}" > pkl-versions

@@ -34,7 +34,7 @@ jobs = new Mapping {
                 name = "Get current latest supported pkl version"
                 run = """
                 mapfile -t pklversions < "pkl-versions"
-                echo "PKL_VERSION=${array[-1]}" >> $GITHUB_ENV
+                echo "PKL_VERSION=${pklversions[-1]}" >> $GITHUB_ENV
                 """
             }
             new ActionStep {
@@ -71,7 +71,7 @@ jobs = new Mapping {
                 name = "Update pkl-versions file with last 10 releases"
                 run = """
                 mapfile -t pklversions < "pkl-versions"
-                pklversions+="${{ needs.\(versionJobName).outputs.latest-version }}"
+                pklversions+=("${{ needs.\(versionJobName).outputs.latest-version }}")
                 start_index=$(( ${#pklversions[@]} > \(base.supportedVersionLimit) ? ${#pklversions[@]} - \(base.supportedVersionLimit) : 0 ))
 
                 printf "%s\\n" "${pklversions[@]:$start_index}" > pkl-versions
