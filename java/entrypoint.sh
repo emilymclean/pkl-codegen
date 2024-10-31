@@ -1,4 +1,4 @@
-#!/bin/sh -l
+#!/bin/sh
 
-mkdir -p "/data/$2"
-java -cp /pklgen.jar org.pkl.codegen.java.Main "/data/$1" -o "/data/$2"
+mkdir -p "$2"
+java -cp /pklgen.jar org.pkl.codegen.java.Main "$1" -o "$2"
