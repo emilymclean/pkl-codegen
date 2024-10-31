@@ -1,0 +1,110 @@
+amends "package://github.com/emilymclean/pkl-github-actions/releases/download/v0.1.0-alpha.96/pkl-github-actions@0.1.0-alpha.96#/actions.pkl"
+import "base.pkl"
+
+local versionJobName = "get-current-pkl-version"
+
+local checkout = new ActionStep {
+    uses = "actions/checkout@v3"
+    with = new Mapping {
+        ["fetch-depth"] = 0
+        ["ref"] = "develop"
+    }
+}
+
+name = "Update build to include the latest Pkl releases"
+
+on = new On {
+    workflow_dispatch = new WorkflowDispatch {}
+    schedule = new Listing {
+        new Schedule {
+            cron = "0 13 * * 1"
+        }
+    }
+}
+
+jobs = new Mapping {
+    ["get-current-pkl-version"] = new Job {
+        outputs = new Mapping {
+            ["current-version"] = "${{ env.PKL_VERSION }}"
+            ["latest-version"] = "${{ steps.pkl-release.outputs.release }}"
+        }
+        steps = new Listing {
+            checkout
+            new CommandStep {
+                name = "Get current latest supported pkl version"
+                run = """
+                mapfile -t pklversions < "pkl-versions"
+                echo "PKL_VERSION=${array[-1]}" >> $GITHUB_ENV
+                """
+            }
+            new ActionStep {
+                name = "Get latest pkl version"
+                id = "pkl-release"
+                uses = "pozetroninc/github-action-get-latest-release@master"
+                with = new Mapping {
+                    ["owner"] = "apple"
+                    ["repo"] = "pkl"
+                    ["excludes"] = "prerelease, draft"
+                }
+            }
+        }
+    }
+    ["update-pkl-pipeline"] = new Job {
+        needs = new Listing {
+            versionJobName
+        }
+        `if` = "needs.\(versionJobName).outputs.current-version != needs.\(versionJobName).outputs.latest-version"
+        permissions = new Mapping {
+            ["contents"] = "write"
+            ["pull-requests"] = "write"
+        }
+        steps = new Listing {
+            checkout
+            new ActionStep {
+                name = "Install pkl"
+                uses = "pkl-community/setup-pkl@v0"
+                with = new Mapping {
+                    ["pkl-version"] = "0.25.3"
+                }
+            }
+            new CommandStep {
+                name = "Update pkl-versions file with last 10 releases"
+                run = """
+                mapfile -t pklversions < "pkl-versions"
+                pklversions+="${{ needs.\(versionJobName).outputs.latest-version }}"
+                start_index=$(( ${#pklversions[@]} > \(base.supportedVersionLimit) ? ${#pklversions[@]} - \(base.supportedVersionLimit) : 0 ))
+
+                printf "%s\\n" "${pklversions[@]:$start_index}" > pkl-versions
+                """
+            }
+            new CommandStep {
+                name = "Update currentVersion in base.pkl"
+                run = """
+                sed -i 's/hidden currentVersion = "${{ needs.\(versionJobName).outputs.current-version }}"/hidden currentVersion = "${{ needs.\(versionJobName).outputs.latest-version }}"/g' .github/workflows/base.pkl
+                ./build-pkl.sh
+                """
+            }
+            new ActionStep {
+                name = "Create Pull Request"
+                uses = "peter-evans/create-pull-request@v6"
+                with = new Mapping {
+                    ["branch"] = "update-pkl/feature/${{ needs.version.outputs.latest-version }}-pkl-lang"
+                    ["title"] = "Update Pkl from ${{ needs.version.outputs.current-version }} to ${{ needs.version.outputs.latest-version }}"
+                    ["assignees"] = "emilymclean"
+                    ["reviewers"] = "emilymclean"
+                }
+            }
+        }
+    }
+    ["keep-alive"] = new Job {
+        `if` = "github.event_name == 'schedule'"
+        permissions = new Mapping {
+            ["actions"] = "write"
+        }
+        steps = new Listing {
+            new ActionStep {
+                uses = "liskin/gh-workflow-keepalive@v1"
+            }
+        }
+    }
+}

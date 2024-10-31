@@ -1,6 +1,16 @@
 open module base
 extends "package://github.com/emilymclean/pkl-github-actions/releases/download/v0.1.0-alpha.96/pkl-github-actions@0.1.0-alpha.96#/actions.pkl"
 
+hidden currentVersion = "0.26.3"
+hidden supportedVersionLimit = 10
+
+hidden checkout = new ActionStep {
+    uses = "actions/checkout@v3"
+    with = new Mapping {
+        ["fetch-depth"] = 0
+    }
+}
+
 function dockerBuild(withM: Mapping, ifStatement: String?): Listing = new Listing {
     new ActionStep {
         name = "Build and push Docker image"

@@ -1,0 +1,69 @@
+name: Update build to include the latest Pkl releases
+'on':
+  schedule:
+  - cron: 0 13 * * 1
+  workflow_dispatch: {}
+jobs:
+  get-current-pkl-version:
+    runs-on: ubuntu-latest
+    outputs:
+      current-version: ${{ env.PKL_VERSION }}
+      latest-version: ${{ steps.pkl-release.outputs.release }}
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        ref: develop
+    - name: Get current latest supported pkl version
+      run: |-
+        mapfile -t pklversions < "pkl-versions"
+        echo "PKL_VERSION=${array[-1]}" >> $GITHUB_ENV
+    - id: pkl-release
+      name: Get latest pkl version
+      uses: pozetroninc/github-action-get-latest-release@master
+      with:
+        owner: apple
+        repo: pkl
+        excludes: prerelease, draft
+  update-pkl-pipeline:
+    permissions:
+      contents: write
+      pull-requests: write
+    needs:
+    - get-current-pkl-version
+    if: needs.get-current-pkl-version.outputs.current-version != needs.get-current-pkl-version.outputs.latest-version
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        ref: develop
+    - name: Install pkl
+      uses: pkl-community/setup-pkl@v0
+      with:
+        pkl-version: 0.25.3
+    - name: Update pkl-versions file with last 10 releases
+      run: |-
+        mapfile -t pklversions < "pkl-versions"
+        pklversions+="${{ needs.get-current-pkl-version.outputs.latest-version }}"
+        start_index=$(( ${#pklversions[@]} > 10 ? ${#pklversions[@]} - 10 : 0 ))
+
+        printf "%s\n" "${pklversions[@]:$start_index}" > pkl-versions
+    - name: Update currentVersion in base.pkl
+      run: |-
+        sed -i 's/hidden currentVersion = "${{ needs.get-current-pkl-version.outputs.current-version }}"/hidden currentVersion = "${{ needs.get-current-pkl-version.outputs.latest-version }}"/g' .github/workflows/base.pkl
+        ./build-pkl.sh
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v6
+      with:
+        branch: update-pkl/feature/${{ needs.version.outputs.latest-version }}-pkl-lang
+        title: Update Pkl from ${{ needs.version.outputs.current-version }} to ${{ needs.version.outputs.latest-version }}
+        assignees: emilymclean
+        reviewers: emilymclean
+  keep-alive:
+    permissions:
+      actions: write
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: liskin/gh-workflow-keepalive@v1
