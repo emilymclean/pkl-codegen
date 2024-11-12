@@ -1,7 +1,15 @@
-amends "package://github.com/emilymclean/pkl-github-actions/releases/download/v0.1.0-alpha.96/pkl-github-actions@0.1.0-alpha.96#/actions.pkl"
+open module update_pipeline
+extends "package://github.com/emilymclean/pkl-github-actions/releases/download/v0.1.0-alpha.96/pkl-github-actions@0.1.0-alpha.96#/actions.pkl"
 import "base.pkl"
 
-local versionJobName = "get-current-pkl-version"
+hidden represents: String
+hidden repo: String
+
+hidden versionJobName = "get-current-version"
+
+hidden currentVersionStep: Step
+hidden currentVersionOutputVar: String
+hidden updateStep: Function1<String, Step>
 
 local checkout = new ActionStep {
     uses = "actions/checkout@v3"
@@ -10,7 +18,7 @@ local checkout = new ActionStep {
     }
 }
 
-name = "Update build to include the latest Pkl releases"
+name = "Update build to include the latest \(represents) releases"
 
 on = new On {
     workflow_dispatch = new WorkflowDispatch {}
@@ -30,19 +38,19 @@ on = new On {
 jobs = new Mapping {
     [versionJobName] = new Job {
         outputs = new Mapping {
-            ["current-version"] = "${{ env.PKL_VERSION }}"
-            ["latest-version"] = "${{ steps.pkl-release.outputs.release }}"
+            ["current-version"] = "${{ env.\(currentVersionOutputVar) }}"
+            ["latest-version"] = "${{ steps.tool-release.outputs.release }}"
         }
         steps = new Listing {
             checkout
-            base.currentVersion()
+            currentVersionStep
             new ActionStep {
-                name = "Get latest pkl version"
-                id = "pkl-release"
+                name = "Get latest \(represents) version"
+                id = "tool-release"
                 uses = "pozetroninc/github-action-get-latest-release@master"
                 with = new Mapping {
                     ["owner"] = "apple"
-                    ["repo"] = "pkl"
+                    ["repo"] = repo
                     ["excludes"] = "prerelease, draft"
                 }
             }
@@ -50,13 +58,13 @@ jobs = new Mapping {
                 name = "Job Summary"
                 run = """
                 echo "### Versions" >> $GITHUB_STEP_SUMMARY
-                echo "Current version: ${{ env.PKL_VERSION }}" >> $GITHUB_STEP_SUMMARY
+                echo "Current version: ${{ env.\(currentVersionOutputVar) }}" >> $GITHUB_STEP_SUMMARY
                 echo "Latest version: ${{ steps.pkl-release.outputs.release }}" >> $GITHUB_STEP_SUMMARY
                 """
             }
         }
     }
-    ["update-pkl-pipeline"] = new Job {
+    ["update-\(represents)-version"] = new Job {
         needs = new Listing {
             versionJobName
         }
@@ -67,23 +75,7 @@ jobs = new Mapping {
         }
         steps = new Listing {
             checkout
-            new ActionStep {
-                name = "Install pkl"
-                uses = "pkl-community/setup-pkl@v0"
-                with = new Mapping {
-                    ["pkl-version"] = "0.25.3"
-                }
-            }
-            new CommandStep {
-                name = "Update pkl-versions file with last 10 releases"
-                run = """
-                mapfile -t pklversions < "pkl-versions"
-                pklversions+=("${{ needs.\(versionJobName).outputs.latest-version }}")
-                start_index=$(( ${#pklversions[@]} > \(base.supportedVersionLimit) ? ${#pklversions[@]} - \(base.supportedVersionLimit) : 0 ))
-
-                printf "%s\\n" "${pklversions[@]:$start_index}" > pkl-versions
-                """
-            }
+            updateStep.apply("${{ needs.get-current-version.outputs.latest-version }}")
             new ActionStep {
                 name = "Setup node for gomplate"
                 uses = "actions/setup-node@v4"
@@ -99,8 +91,8 @@ jobs = new Mapping {
                 name = "Create Pull Request"
                 uses = "peter-evans/create-pull-request@v7"
                 with = new Mapping {
-                    ["branch"] = "update-pkl/feature/${{ needs.\(versionJobName).outputs.latest-version }}-pkl-lang"
-                    ["title"] = "Update Pkl from ${{ needs.\(versionJobName).outputs.current-version }} to ${{ needs.\(versionJobName).outputs.latest-version }}"
+                    ["branch"] = "update-\(represents)/feature/${{ needs.\(versionJobName).outputs.latest-version }}-pkl-lang"
+                    ["title"] = "Update \(represents) from ${{ needs.\(versionJobName).outputs.current-version }} to ${{ needs.\(versionJobName).outputs.latest-version }}"
                     ["assignees"] = "emilymclean"
                     ["reviewers"] = "emilymclean"
                     ["draft"] = "always-true"

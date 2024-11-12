@@ -1,5 +1,5 @@
 amends "package://github.com/emilymclean/pkl-github-actions/releases/download/v0.1.0-alpha.96/pkl-github-actions@0.1.0-alpha.96#/actions.pkl"
-import "base.pkl"
+import "lib/base.pkl"
 
 local platforms = List("swift", "java", "kotlin", "doc")
 
@@ -18,7 +18,7 @@ local function testPlatform(platform: String): Job = new Job {
     steps = (
         new Listing {
             base.checkout
-            base.currentVersion()
+            base.currentVersion
         }.toList() +
         base.renderForPlatform(platform, "${{ env.PKL_VERSION }}").toList() +
         base.dockerSetup().toList() +

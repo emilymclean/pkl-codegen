@@ -1,4 +1,4 @@
-name: Build Java, Kotlin, and Swift Docker images
+name: Build Java, Kotlin, Swift, and PklDoc Docker images
 'on':
   push:
     branches:
@@ -65,6 +65,54 @@ jobs:
         json=$(jq -n -c --argjson arr "$(printf '%s
         ' "${pklversions[@]}" | jq -R . | jq -s .)" '{"version": $arr}')
         echo "versions=$(echo "$json")" >> ${GITHUB_ENV}
+  was-updated-java:
+    runs-on: ubuntu-latest
+    outputs:
+      any-changed: ${{ steps.changed.outputs.any_changed }}
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - id: changed
+      uses: tj-actions/changed-files@v45
+      with:
+        files: java/**
+  was-updated-kotlin:
+    runs-on: ubuntu-latest
+    outputs:
+      any-changed: ${{ steps.changed.outputs.any_changed }}
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - id: changed
+      uses: tj-actions/changed-files@v45
+      with:
+        files: kotlin/**
+  was-updated-doc:
+    runs-on: ubuntu-latest
+    outputs:
+      any-changed: ${{ steps.changed.outputs.any_changed }}
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - id: changed
+      uses: tj-actions/changed-files@v45
+      with:
+        files: doc/**
+  was-updated-swift:
+    runs-on: ubuntu-latest
+    outputs:
+      any-changed: ${{ steps.changed.outputs.any_changed }}
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - id: changed
+      uses: tj-actions/changed-files@v45
+      with:
+        files: swift/**
   build-java:
     permissions:
       contents: read
@@ -72,6 +120,8 @@ jobs:
     needs:
     - version
     - pkl-versions
+    - was-updated-java
+    if: needs.was-updated-java.outputs.any-changed == 'true'
     runs-on: ubuntu-latest
     strategy:
       matrix: ${{fromJson(needs.pkl-versions.outputs.versions)}}
@@ -140,6 +190,8 @@ jobs:
     needs:
     - version
     - pkl-versions
+    - was-updated-kotlin
+    if: needs.was-updated-kotlin.outputs.any-changed == 'true'
     runs-on: ubuntu-latest
     strategy:
       matrix: ${{fromJson(needs.pkl-versions.outputs.versions)}}
@@ -208,6 +260,8 @@ jobs:
     needs:
     - version
     - pkl-versions
+    - was-updated-doc
+    if: needs.was-updated-doc.outputs.any-changed == 'true'
     runs-on: ubuntu-latest
     strategy:
       matrix: ${{fromJson(needs.pkl-versions.outputs.versions)}}
@@ -276,6 +330,8 @@ jobs:
     needs:
     - version
     - pkl-versions
+    - was-updated-swift
+    if: needs.was-updated-swift.outputs.any-changed == 'true'
     runs-on: ubuntu-latest
     strategy:
       matrix: ${{fromJson(needs.pkl-versions.outputs.versions)}}
@@ -283,6 +339,8 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
+    - name: Read swift-tool-version
+      run: echo "swift_tool_version=$(cat swift/swift-tool-version)" >> $GITHUB_ENV
     - name: Render template.Dockerfile
       env:
         pkl_version: ${{ matrix.version }}

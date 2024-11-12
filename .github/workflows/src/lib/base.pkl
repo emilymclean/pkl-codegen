@@ -17,7 +17,7 @@ hidden checkout = new ActionStep {
     }
 }
 
-function currentVersion(): Step = new CommandStep {
+hidden currentVersion: Step = new CommandStep {
     name = "Get current latest supported pkl version"
     run = """
     mapfile -t pklversions < "pkl-versions"
@@ -55,6 +55,15 @@ function dockerSetup(): Listing<Step> = new Listing {
 }
 
 function renderForPlatform(platform: String, version: String): Listing<Step> = new Listing {
+    if (platform == "swift")
+        new CommandStep {
+            name = "Read swift-tool-version"
+            run = """
+            echo "swift_tool_version=$(cat swift/swift-tool-version)" >> $GITHUB_ENV
+            """
+        }
+    else 
+        null 
     if (platform == "swift")
         new ActionStep {
             name = "Render template.Dockerfile"
@@ -97,4 +106,4 @@ function renderForPlatform(platform: String, version: String): Listing<Step> = n
         name = "Make endpoint.sh executable"
         run = "chmod +x \(platform)/entrypoint.sh"
     }
-}
+}.toList().filterNonNull().toListing()
