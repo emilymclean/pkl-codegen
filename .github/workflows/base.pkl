@@ -93,4 +93,8 @@ function renderForPlatform(platform: String, version: String): Listing<Step> = n
             ["engine"] = "mustache"
         }
     }
+    new CommandStep {
+        name = "Make endpoint.sh executable"
+        run = "chmod +x \(platform)/entrypoint.sh"
+    }
 }

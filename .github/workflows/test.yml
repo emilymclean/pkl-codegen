@@ -31,6 +31,8 @@ jobs:
         template-file: templates/entrypoint.template.sh
         output-file: swift/entrypoint.sh
         engine: mustache
+    - name: Make endpoint.sh executable
+      run: chmod +x swift/entrypoint.sh
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v2
     - name: Setup Docker Buildx
@@ -87,6 +89,8 @@ jobs:
         template-file: templates/entrypoint.template.sh
         output-file: java/entrypoint.sh
         engine: mustache
+    - name: Make endpoint.sh executable
+      run: chmod +x java/entrypoint.sh
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v2
     - name: Setup Docker Buildx
@@ -143,6 +147,8 @@ jobs:
         template-file: templates/entrypoint.template.sh
         output-file: kotlin/entrypoint.sh
         engine: mustache
+    - name: Make endpoint.sh executable
+      run: chmod +x kotlin/entrypoint.sh
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v2
     - name: Setup Docker Buildx
@@ -199,6 +205,8 @@ jobs:
         template-file: templates/entrypoint.template.sh
         output-file: doc/entrypoint.sh
         engine: mustache
+    - name: Make endpoint.sh executable
+      run: chmod +x doc/entrypoint.sh
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v2
     - name: Setup Docker Buildx

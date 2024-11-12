@@ -95,6 +95,8 @@ jobs:
         template-file: templates/entrypoint.template.sh
         output-file: java/entrypoint.sh
         engine: mustache
+    - name: Make endpoint.sh executable
+      run: chmod +x java/entrypoint.sh
     - name: Lowercase repository name
       env:
         REPOSITORY: ${{ github.repository }}
@@ -161,6 +163,8 @@ jobs:
         template-file: templates/entrypoint.template.sh
         output-file: kotlin/entrypoint.sh
         engine: mustache
+    - name: Make endpoint.sh executable
+      run: chmod +x kotlin/entrypoint.sh
     - name: Lowercase repository name
       env:
         REPOSITORY: ${{ github.repository }}
@@ -227,6 +231,8 @@ jobs:
         template-file: templates/entrypoint.template.sh
         output-file: doc/entrypoint.sh
         engine: mustache
+    - name: Make endpoint.sh executable
+      run: chmod +x doc/entrypoint.sh
     - name: Lowercase repository name
       env:
         REPOSITORY: ${{ github.repository }}
@@ -293,6 +299,8 @@ jobs:
         template-file: templates/entrypoint.template.sh
         output-file: swift/entrypoint.sh
         engine: mustache
+    - name: Make endpoint.sh executable
+      run: chmod +x swift/entrypoint.sh
     - name: Lowercase repository name
       env:
         REPOSITORY: ${{ github.repository }}
