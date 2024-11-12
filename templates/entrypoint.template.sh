@@ -1,19 +1,32 @@
 #!/bin/bash
 
 pos_args=()
+named_args=()
+output_folder=""
 
-while [[ $# -gt 0 ]] && [[ "$1" != -* ]]; do
-  pos_args+=("$1")
-  shift
+while [[ $# -gt 0 ]]; do
+  if [[ "$1" == -* ]]; then
+    case "$1" in
+        -o)
+            shift
+            output_folder="$1"
+            shift
+            ;;
+        *)
+            named_args+=("$1" "$2")
+            shift; shift
+            ;;
+    esac
+  else
+    pos_args+=("$1")    
+    shift
+  fi
 done
 
-while getopts ":o:" opt; do
-  case "${opt}" in
-    o)
-        output_folder="$OPTARG"
-        ;;
-  esac
-done
+if [[ -z "$output_folder" ]] && [[ ${#args[@]} -gt 0 ]]; then
+  output_folder="${pos_args[-1]}"
+  named_args+=("-o" "$output_folder")
+fi
 
 mkdir -p "$output_folder"
-{{ .Env.call }} "${pos_args[@]}" $@
+{{ .Env.call }} "${pos_args[@]}" "${named_args[@]}"
