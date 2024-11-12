@@ -4,12 +4,16 @@ import "lib/base.pkl"
 local function testString(platform: String, extraFiles: List<String>): String = """
 # Test using new style explicitly listing -o
 docker run --rm -v "./test-data/:/data" test/\(platform):latest /data/example.pkl \(if(extraFiles.length > 0) extraFiles.join(" ") else "") -o /data/newstyle-out
+# Test using new style explicitly listing --output-dir
+docker run --rm -v "./test-data/:/data" test/\(platform):latest /data/example.pkl \(if(extraFiles.length > 0) extraFiles.join(" ") else "") --output-dir /data/newstyle-full-out
 # Test using old style without -o
 docker run --rm -v "./test-data/:/data" test/\(platform):latest /data/example.pkl \(if(extraFiles.length > 0) extraFiles.join(" ") else "") /data/oldstyle-out
 
 ls test-data
 echo "Output folder contents:"
 ls test-data/newstyle-out
+echo "Output Full folder contents:"
+ls test-data/newstyle-full-out
 """
 
 local function testPlatform(platform: String): Job = new Job {

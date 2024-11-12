@@ -26,6 +26,8 @@ local function wasUpdated(dir: String): Job = new Job {
             with = new Mapping {
                 ["files"] = """
                 \(dir)/**
+                templates/entrypoint.template.sh
+                pkl-versions
                 """
             }
         }
