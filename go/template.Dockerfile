@@ -1,10 +1,7 @@
-FROM ubuntu:22.04
+FROM golang:1.23.3-bullseye
 
 RUN apt-get update
-RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -yqq software-properties-common
-RUN add-apt-repository -y ppa:longsleep/golang-backports
-RUN apt-get update
-RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -yqq curl golang-go
+RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -yqq curl
 
 COPY setup.sh /setup.sh
 RUN /setup.sh && \
