@@ -61,7 +61,7 @@ jobs:
     - name: Update README and entrypoints
       run: |-
         npm install -g gomplate
-        ./fill-templates.sh
+        ./render-templates.sh
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v7
       with:

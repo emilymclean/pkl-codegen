@@ -33,4 +33,4 @@ named_args+=("-o" "$output_folder")
 
 mkdir -p "$output_folder"
 
-{{ .Env.call }} "${pos_args[@]}" "${named_args[@]}"
+{{{ env.call }}} "${pos_args[@]}" "${named_args[@]}"

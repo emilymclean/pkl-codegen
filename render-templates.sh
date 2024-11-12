@@ -22,12 +22,3 @@ export version_string
 export latest_pkl_version
 
 gomplate -f templates/README.template.md -o README.md
-
-platforms=("swift" "kotlin" "java" "doc")
-IFS=$'\n' calls=($(< templates/calls.sh))
-
-for i in "${!platforms[@]}"; do 
-  call="${calls[$i]}"
-  export call
-  gomplate -f templates/entrypoint.template.sh -o "${platforms[$i]}/entrypoint.sh"
-done
