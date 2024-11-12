@@ -12,6 +12,11 @@ while [[ $# -gt 0 ]]; do
             output_folder="$1"
             shift
             ;;
+        --output-dir)
+            shift
+            output_folder="$1"
+            shift
+            ;;
         *)
             named_args+=("$1" "$2")
             shift; shift
