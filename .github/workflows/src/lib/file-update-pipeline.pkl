@@ -95,7 +95,7 @@ jobs = new Mapping {
                     ["title"] = "Update \(represents) from ${{ needs.\(versionJobName).outputs.current-version }} to ${{ needs.\(versionJobName).outputs.latest-version }}"
                     ["assignees"] = "emilymclean"
                     ["reviewers"] = "emilymclean"
-                    ["draft"] = "always-true"
+                    ["token"] = "${{ secrets.WORKER_PAT }}"
                 }
             }
         }
