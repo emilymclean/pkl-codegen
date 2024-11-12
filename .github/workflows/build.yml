@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.gitversion.outputs.semVer }}
+      major: ${{ steps.gitversion.outputs.major }}
     steps:
     - uses: actions/checkout@v3
       with:
@@ -111,6 +112,7 @@ jobs:
           ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}
           ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}-nightly
           ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}-${{ needs.version.outputs.version }}
+          ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}-${{ needs.version.outputs.major }}
     - name: Build and push Docker image
       if: github.ref != 'refs/heads/main'
       uses: docker/build-push-action@v4
@@ -168,6 +170,7 @@ jobs:
           ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}
           ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}-nightly
           ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}-${{ needs.version.outputs.version }}
+          ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}-${{ needs.version.outputs.major }}
     - name: Build and push Docker image
       if: github.ref != 'refs/heads/main'
       uses: docker/build-push-action@v4
@@ -225,6 +228,7 @@ jobs:
           ghcr.io/${{ env.REPOSITORY_LC }}-doc:${{ matrix.version }}
           ghcr.io/${{ env.REPOSITORY_LC }}-doc:${{ matrix.version }}-nightly
           ghcr.io/${{ env.REPOSITORY_LC }}-doc:${{ matrix.version }}-${{ needs.version.outputs.version }}
+          ghcr.io/${{ env.REPOSITORY_LC }}-doc:${{ matrix.version }}-${{ needs.version.outputs.major }}
     - name: Build and push Docker image
       if: github.ref != 'refs/heads/main'
       uses: docker/build-push-action@v4
@@ -282,6 +286,7 @@ jobs:
           ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}
           ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}-nightly
           ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}-${{ needs.version.outputs.version }}
+          ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}-${{ needs.version.outputs.major }}
     - name: Build and push Docker image
       if: github.ref != 'refs/heads/main'
       uses: docker/build-push-action@v4
