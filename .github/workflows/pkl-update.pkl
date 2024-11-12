@@ -56,7 +56,7 @@ jobs = new Mapping {
             }
         }
     }
-    ["update-pkl-pipeline"] = new Job {
+    ["update-pkl-version"] = new Job {
         needs = new Listing {
             versionJobName
         }
