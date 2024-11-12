@@ -65,7 +65,6 @@ jobs:
         title: Update pkl from ${{ needs.get-current-version.outputs.current-version }} to ${{ needs.get-current-version.outputs.latest-version }}
         assignees: emilymclean
         reviewers: emilymclean
-        draft: always-true
         token: ${{ secrets.WORKER_PAT }}
   keep-alive:
     permissions:
