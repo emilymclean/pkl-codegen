@@ -23,4 +23,5 @@ The supported platforms/images are as follows:
 | Kotlin 	| `pkl-codegen-kotlin` 	|
 | Java   	| `pkl-codegen-java`   	|
 | Swift  	| `pkl-codegen-swift`  	|
+| Go      	| `pkl-codegen-go`  	|
 | PklDoc 	| `pkl-codegen-doc`    	|

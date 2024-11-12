@@ -6,12 +6,9 @@ RUN curl -L https://download.swift.org/swift-5.10-release/ubuntu2204/swift-5.10-
         tar xzf swift.tar.gz && \
         mv swift-5.10-RELEASE-ubuntu22.04 /usr/share/swift
 
-RUN curl -L -o /pkl https://github.com/apple/pkl/releases/download/{{{ env.pkl_version }}}/pkl-linux-amd64 && \
-        chmod +x /pkl && \
-        mv pkl /usr/share/swift/usr/bin/pkl
-
-RUN curl -L https://github.com/apple/pkl-swift/releases/download/{{{ env.swift_tool_version }}}/pkl-gen-swift-linux-amd64.bin -o /pkl-gen-swift && \
-        chmod +x /pkl-gen-swift
+COPY setup.sh /setup.sh
+RUN /setup.sh && \
+        rm -rf /setup.sh
 
 COPY entrypoint.sh /entrypoint.sh
 
