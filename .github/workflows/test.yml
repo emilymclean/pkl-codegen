@@ -277,7 +277,7 @@ jobs:
         load: true
         tags: test/go:latest
     - run: |-
-        docker run --rm -v "./test-data/:/data" test/go:latest /data/example.pkl --output-path /data/newstyle-out
+        docker run --rm -v "./test-data/:/data" test/go:latest /data/example.pkl --mapping example=github.com/emilymclean/pkl-codegen/example --output-path /data/newstyle-out
 
         echo "Output folder contents:"
         ls test-data/newstyle-out

@@ -41,7 +41,7 @@ local function testPlatform(platform: String): Job = new Job {
             else if (platform == base.PLATFORM_GO)
                 new CommandStep {
                     run = """
-                    docker run --rm -v "./test-data/:/data" test/\(platform):latest /data/example.pkl --output-path /data/newstyle-out
+                    docker run --rm -v "./test-data/:/data" test/\(platform):latest /data/example.pkl --mapping example=github.com/emilymclean/pkl-codegen/example --output-path /data/newstyle-out
 
                     echo "Output folder contents:"
                     ls test-data/newstyle-out
