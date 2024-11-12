@@ -92,7 +92,7 @@ jobs = new Mapping {
                 name = "Update README and entrypoints"
                 run = """
                 npm install -g gomplate
-                ./fill-templates.sh
+                ./render-templates.sh
                 """
             }
             new ActionStep {

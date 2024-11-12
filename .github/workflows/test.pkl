@@ -4,10 +4,14 @@ import "base.pkl"
 local platforms = List("swift", "java", "kotlin", "doc")
 
 local function testString(platform: String, extraFiles: List<String>): String = """
-docker run --rm -v "./test-data/:/data" test/\(platform):latest /data/example.pkl \(if(extraFiles.length > 0) extraFiles.join(" ") else "") -o /data/example.out
+# Test using new style explicitly listing -o
+docker run --rm -v "./test-data/:/data" test/\(platform):latest /data/example.pkl \(if(extraFiles.length > 0) extraFiles.join(" ") else "") -o /data/newstyle-out
+# Test using old style without -o
+docker run --rm -v "./test-data/:/data" test/\(platform):latest /data/example.pkl \(if(extraFiles.length > 0) extraFiles.join(" ") else "") /data/oldstyle-out
+
 ls test-data
 echo "Output folder contents:"
-ls test-data/example.out
+ls test-data/newstyle-out
 """
 
 local function testPlatform(platform: String): Job = new Job {
@@ -15,8 +19,8 @@ local function testPlatform(platform: String): Job = new Job {
         new Listing {
             base.checkout
             base.currentVersion()
-            base.renderForPlatform(platform, "${{ env.PKL_VERSION }}")
         }.toList() +
+        base.renderForPlatform(platform, "${{ env.PKL_VERSION }}").toList() +
         base.dockerSetup().toList() +
         base.dockerBuild(
             new Mapping {
@@ -36,7 +40,7 @@ local function testPlatform(platform: String): Job = new Job {
                 }
             else if (platform == "java") 
                 new CommandStep {
-                    run = testString(platform, List("--generate-getters"))
+                    run = testString(platform, List("--generate-getters", "/data/test.pkl"))
                 }
             else
                 new CommandStep {
@@ -46,7 +50,7 @@ local function testPlatform(platform: String): Job = new Job {
                 uses = "actions/upload-artifact@v4"
                 with = new Mapping {
                     ["name"] = "\(platform)-output"
-                    ["path"] = "test-data/example.out/"
+                    ["path"] = "test-data/newstyle-out/"
                 }
             }
         }.toList()

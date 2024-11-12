@@ -23,6 +23,16 @@ jobs:
         template-file: swift/template.Dockerfile
         output-file: swift/Dockerfile
         engine: mustache
+    - name: Render endpoint.sh
+      env:
+        call: LD_LIBRARY_PATH=/usr/share/swift/usr/lib/swift/linux PATH=$PATH:/usr/share/swift/usr/bin/ /pkl-gen-swift
+      uses: recih/template-render-action@v1.0.2
+      with:
+        template-file: templates/entrypoint.template.sh
+        output-file: swift/entrypoint.sh
+        engine: mustache
+    - name: Make endpoint.sh executable
+      run: chmod +x swift/entrypoint.sh
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v2
     - name: Setup Docker Buildx
@@ -41,14 +51,18 @@ jobs:
         load: true
         tags: test/swift:latest
     - run: |-
-        docker run --rm -v "./test-data/:/data" test/swift:latest /data/example.pkl "/data/example space.pkl" -o /data/example.out
+        # Test using new style explicitly listing -o
+        docker run --rm -v "./test-data/:/data" test/swift:latest /data/example.pkl "/data/example space.pkl" -o /data/newstyle-out
+        # Test using old style without -o
+        docker run --rm -v "./test-data/:/data" test/swift:latest /data/example.pkl "/data/example space.pkl" /data/oldstyle-out
+
         ls test-data
         echo "Output folder contents:"
-        ls test-data/example.out
+        ls test-data/newstyle-out
     - uses: actions/upload-artifact@v4
       with:
         name: swift-output
-        path: test-data/example.out/
+        path: test-data/newstyle-out/
   test-java:
     runs-on: ubuntu-latest
     steps:
@@ -67,6 +81,16 @@ jobs:
         template-file: java/project/build.template.gradle
         output-file: java/project/build.gradle
         engine: mustache
+    - name: Render endpoint.sh
+      env:
+        call: java -cp /pklgen.jar org.pkl.codegen.java.Main
+      uses: recih/template-render-action@v1.0.2
+      with:
+        template-file: templates/entrypoint.template.sh
+        output-file: java/entrypoint.sh
+        engine: mustache
+    - name: Make endpoint.sh executable
+      run: chmod +x java/entrypoint.sh
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v2
     - name: Setup Docker Buildx
@@ -85,14 +109,18 @@ jobs:
         load: true
         tags: test/java:latest
     - run: |-
-        docker run --rm -v "./test-data/:/data" test/java:latest /data/example.pkl --generate-getters -o /data/example.out
+        # Test using new style explicitly listing -o
+        docker run --rm -v "./test-data/:/data" test/java:latest /data/example.pkl --generate-getters /data/test.pkl -o /data/newstyle-out
+        # Test using old style without -o
+        docker run --rm -v "./test-data/:/data" test/java:latest /data/example.pkl --generate-getters /data/test.pkl /data/oldstyle-out
+
         ls test-data
         echo "Output folder contents:"
-        ls test-data/example.out
+        ls test-data/newstyle-out
     - uses: actions/upload-artifact@v4
       with:
         name: java-output
-        path: test-data/example.out/
+        path: test-data/newstyle-out/
   test-kotlin:
     runs-on: ubuntu-latest
     steps:
@@ -111,6 +139,16 @@ jobs:
         template-file: kotlin/project/build.template.gradle
         output-file: kotlin/project/build.gradle
         engine: mustache
+    - name: Render endpoint.sh
+      env:
+        call: java -cp /pklgen.jar org.pkl.codegen.kotlin.Main
+      uses: recih/template-render-action@v1.0.2
+      with:
+        template-file: templates/entrypoint.template.sh
+        output-file: kotlin/entrypoint.sh
+        engine: mustache
+    - name: Make endpoint.sh executable
+      run: chmod +x kotlin/entrypoint.sh
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v2
     - name: Setup Docker Buildx
@@ -129,14 +167,18 @@ jobs:
         load: true
         tags: test/kotlin:latest
     - run: |-
-        docker run --rm -v "./test-data/:/data" test/kotlin:latest /data/example.pkl "/data/example space.pkl" -o /data/example.out
+        # Test using new style explicitly listing -o
+        docker run --rm -v "./test-data/:/data" test/kotlin:latest /data/example.pkl "/data/example space.pkl" -o /data/newstyle-out
+        # Test using old style without -o
+        docker run --rm -v "./test-data/:/data" test/kotlin:latest /data/example.pkl "/data/example space.pkl" /data/oldstyle-out
+
         ls test-data
         echo "Output folder contents:"
-        ls test-data/example.out
+        ls test-data/newstyle-out
     - uses: actions/upload-artifact@v4
       with:
         name: kotlin-output
-        path: test-data/example.out/
+        path: test-data/newstyle-out/
   test-doc:
     runs-on: ubuntu-latest
     steps:
@@ -155,6 +197,16 @@ jobs:
         template-file: doc/project/build.template.gradle
         output-file: doc/project/build.gradle
         engine: mustache
+    - name: Render endpoint.sh
+      env:
+        call: java -cp /pklgen.jar org.pkl.doc.Main
+      uses: recih/template-render-action@v1.0.2
+      with:
+        template-file: templates/entrypoint.template.sh
+        output-file: doc/entrypoint.sh
+        engine: mustache
+    - name: Make endpoint.sh executable
+      run: chmod +x doc/entrypoint.sh
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v2
     - name: Setup Docker Buildx
@@ -173,11 +225,15 @@ jobs:
         load: true
         tags: test/doc:latest
     - run: |-
-        docker run --rm -v "./test-data/:/data" test/doc:latest /data/example.pkl "/data/example space.pkl" /data/doc-package-info.pkl -o /data/example.out
+        # Test using new style explicitly listing -o
+        docker run --rm -v "./test-data/:/data" test/doc:latest /data/example.pkl "/data/example space.pkl" /data/doc-package-info.pkl -o /data/newstyle-out
+        # Test using old style without -o
+        docker run --rm -v "./test-data/:/data" test/doc:latest /data/example.pkl "/data/example space.pkl" /data/doc-package-info.pkl /data/oldstyle-out
+
         ls test-data
         echo "Output folder contents:"
-        ls test-data/example.out
+        ls test-data/newstyle-out
     - uses: actions/upload-artifact@v4
       with:
         name: doc-output
-        path: test-data/example.out/
+        path: test-data/newstyle-out/
