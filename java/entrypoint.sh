@@ -1,19 +1,36 @@
 #!/bin/bash
 
 pos_args=()
+named_args=()
+output_folder=""
 
-while [[ $# -gt 0 ]] && [[ "$1" != -* ]]; do
-  pos_args+=("$1")
-  shift
+while [[ $# -gt 0 ]]; do
+  if [[ "$1" == -* ]]; then
+    case "$1" in
+        -o)
+            shift
+            output_folder="$1"
+            shift
+            ;;
+        *)
+            named_args+=("$1" "$2")
+            shift; shift
+            ;;
+    esac
+  else
+    pos_args+=("$1")    
+    shift
+  fi
 done
 
-while getopts ":o:" opt; do
-  case "${opt}" in
-    o)
-        output_folder="$OPTARG"
-        ;;
-  esac
-done
+if [[ -z "$output_folder" ]] && [[ ${#pos_args[@]} -gt 0 ]]; then
+  last_index=$((${#pos_args[@]} - 1))
+  output_folder="${pos_args[$last_index]}"
+  unset 'pos_args[$last_index]'
+fi
+
+named_args+=("-o" "$output_folder")
 
 mkdir -p "$output_folder"
-java -cp /pklgen.jar org.pkl.codegen.java.Main "${pos_args[@]}" $@
+
+java -cp /pklgen.jar org.pkl.codegen.java.Main "${pos_args[@]}" "${named_args[@]}"

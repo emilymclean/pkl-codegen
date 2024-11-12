@@ -41,14 +41,18 @@ jobs:
         load: true
         tags: test/swift:latest
     - run: |-
-        docker run --rm -v "./test-data/:/data" test/swift:latest /data/example.pkl "/data/example space.pkl" -o /data/example.out
+        # Test using new style explicitly listing -o
+        docker run --rm -v "./test-data/:/data" test/swift:latest /data/example.pkl "/data/example space.pkl" -o /data/newstyle-out
+        # Test using old style without -o
+        docker run --rm -v "./test-data/:/data" test/swift:latest /data/example.pkl "/data/example space.pkl" /data/oldstyle-out
+
         ls test-data
         echo "Output folder contents:"
-        ls test-data/example.out
+        ls test-data/newstyle-out
     - uses: actions/upload-artifact@v4
       with:
         name: swift-output
-        path: test-data/example.out/
+        path: test-data/newstyle-out/
   test-java:
     runs-on: ubuntu-latest
     steps:
@@ -85,14 +89,18 @@ jobs:
         load: true
         tags: test/java:latest
     - run: |-
-        docker run --rm -v "./test-data/:/data" test/java:latest /data/example.pkl --generate-getters -o /data/example.out
+        # Test using new style explicitly listing -o
+        docker run --rm -v "./test-data/:/data" test/java:latest /data/example.pkl --generate-getters /data/test.pkl -o /data/newstyle-out
+        # Test using old style without -o
+        docker run --rm -v "./test-data/:/data" test/java:latest /data/example.pkl --generate-getters /data/test.pkl /data/oldstyle-out
+
         ls test-data
         echo "Output folder contents:"
-        ls test-data/example.out
+        ls test-data/newstyle-out
     - uses: actions/upload-artifact@v4
       with:
         name: java-output
-        path: test-data/example.out/
+        path: test-data/newstyle-out/
   test-kotlin:
     runs-on: ubuntu-latest
     steps:
@@ -129,14 +137,18 @@ jobs:
         load: true
         tags: test/kotlin:latest
     - run: |-
-        docker run --rm -v "./test-data/:/data" test/kotlin:latest /data/example.pkl "/data/example space.pkl" -o /data/example.out
+        # Test using new style explicitly listing -o
+        docker run --rm -v "./test-data/:/data" test/kotlin:latest /data/example.pkl "/data/example space.pkl" -o /data/newstyle-out
+        # Test using old style without -o
+        docker run --rm -v "./test-data/:/data" test/kotlin:latest /data/example.pkl "/data/example space.pkl" /data/oldstyle-out
+
         ls test-data
         echo "Output folder contents:"
-        ls test-data/example.out
+        ls test-data/newstyle-out
     - uses: actions/upload-artifact@v4
       with:
         name: kotlin-output
-        path: test-data/example.out/
+        path: test-data/newstyle-out/
   test-doc:
     runs-on: ubuntu-latest
     steps:
@@ -173,11 +185,15 @@ jobs:
         load: true
         tags: test/doc:latest
     - run: |-
-        docker run --rm -v "./test-data/:/data" test/doc:latest /data/example.pkl "/data/example space.pkl" /data/doc-package-info.pkl -o /data/example.out
+        # Test using new style explicitly listing -o
+        docker run --rm -v "./test-data/:/data" test/doc:latest /data/example.pkl "/data/example space.pkl" /data/doc-package-info.pkl -o /data/newstyle-out
+        # Test using old style without -o
+        docker run --rm -v "./test-data/:/data" test/doc:latest /data/example.pkl "/data/example space.pkl" /data/doc-package-info.pkl /data/oldstyle-out
+
         ls test-data
         echo "Output folder contents:"
-        ls test-data/example.out
+        ls test-data/newstyle-out
     - uses: actions/upload-artifact@v4
       with:
         name: doc-output
-        path: test-data/example.out/
+        path: test-data/newstyle-out/
