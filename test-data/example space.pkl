@@ -1,0 +1,8 @@
+
+class Thing {
+    content: String
+}
+
+thing = new Thing {
+    content = "Hello World!"
+}

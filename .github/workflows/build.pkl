@@ -1,7 +1,7 @@
 amends "package://github.com/emilymclean/pkl-github-actions/releases/download/v0.1.0-alpha.96/pkl-github-actions@0.1.0-alpha.96#/actions.pkl"
 import "base.pkl"
 
-local fatJars = List("java", "kotlin")
+local fatJars = List("java", "kotlin", "doc")
 
 local dockerPermissions = new Mapping {
     ["contents"] = "read"

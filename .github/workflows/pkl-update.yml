@@ -1,5 +1,9 @@
 name: Update build to include the latest Pkl releases
 'on':
+  pull_request:
+    branches:
+    - main
+    - develop
   schedule:
   - cron: 0 13 * * 1
   workflow_dispatch: {}
@@ -25,13 +29,18 @@ jobs:
         owner: apple
         repo: pkl
         excludes: prerelease, draft
+    - name: Job Summary
+      run: |-
+        echo "### Versions" >> $GITHUB_STEP_SUMMARY
+        echo "Current version: ${{ env.PKL_VERSION }}" >> $GITHUB_STEP_SUMMARY
+        echo "Latest version: ${{ steps.pkl-release.outputs.release }}" >> $GITHUB_STEP_SUMMARY
   update-pkl-pipeline:
     permissions:
       contents: write
       pull-requests: write
     needs:
     - get-current-pkl-version
-    if: needs.get-current-pkl-version.outputs.current-version != needs.get-current-pkl-version.outputs.latest-version
+    if: needs.get-current-pkl-version.outputs.current-version != needs.get-current-pkl-version.outputs.latest-version && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -53,11 +62,17 @@ jobs:
       run: |-
         sed -i 's/hidden currentVersion = "${{ needs.get-current-pkl-version.outputs.current-version }}"/hidden currentVersion = "${{ needs.get-current-pkl-version.outputs.latest-version }}"/g' .github/workflows/base.pkl
         ./build-pkl.sh
+    - name: Setup node for gomplate
+      uses: actions/setup-node@v4
+    - name: Update README and entrypoints
+      run: |-
+        npm install -g gomplate
+        ./fill-templates.sh
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v6
       with:
-        branch: update-pkl/feature/${{ needs.version.outputs.latest-version }}-pkl-lang
-        title: Update Pkl from ${{ needs.version.outputs.current-version }} to ${{ needs.version.outputs.latest-version }}
+        branch: update-pkl/feature/${{ needs.get-current-pkl-version.outputs.latest-version }}-pkl-lang
+        title: Update Pkl from ${{ needs.get-current-pkl-version.outputs.current-version }} to ${{ needs.get-current-pkl-version.outputs.latest-version }}
         assignees: emilymclean
         reviewers: emilymclean
   keep-alive:
