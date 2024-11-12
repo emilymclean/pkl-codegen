@@ -66,6 +66,7 @@ jobs:
         assignees: emilymclean
         reviewers: emilymclean
         draft: always-true
+        token: ${{ secrets.WORKER_PAT }}
   keep-alive:
     permissions:
       actions: write
