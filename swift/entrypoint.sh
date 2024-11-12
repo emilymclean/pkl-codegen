@@ -1,7 +1,19 @@
 #!/bin/bash
 
-formatted_args=("${@:1:$#-1}")
-formatted_args+=("-o" "${!#}")
+pos_args=()
 
-mkdir -p "${!#}"
-LD_LIBRARY_PATH=/usr/share/swift/usr/lib/swift/linux PATH=$PATH:/usr/share/swift/usr/bin/ /pkl-gen-swift "${formatted_args[@]}"
+while [[ $# -gt 0 ]] && [[ "$1" != -* ]]; do
+  pos_args+=("$1")
+  shift
+done
+
+while getopts ":o:" opt; do
+  case "${opt}" in
+    o)
+        output_folder="$OPTARG"
+        ;;
+  esac
+done
+
+mkdir -p "$output_folder"
+LD_LIBRARY_PATH=/usr/share/swift/usr/lib/swift/linux PATH=$PATH:/usr/share/swift/usr/bin/ /pkl-gen-swift "${pos_args[@]}" $@

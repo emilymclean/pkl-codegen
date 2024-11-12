@@ -63,12 +63,13 @@ jobs:
         npm install -g gomplate
         ./fill-templates.sh
     - name: Create Pull Request
-      uses: peter-evans/create-pull-request@v6
+      uses: peter-evans/create-pull-request@v7
       with:
         branch: update-pkl/feature/${{ needs.get-current-pkl-version.outputs.latest-version }}-pkl-lang
         title: Update Pkl from ${{ needs.get-current-pkl-version.outputs.current-version }} to ${{ needs.get-current-pkl-version.outputs.latest-version }}
         assignees: emilymclean
         reviewers: emilymclean
+        draft: always-true
   keep-alive:
     permissions:
       actions: write

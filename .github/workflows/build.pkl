@@ -45,6 +45,7 @@ local function docker(dir: String): Listing = (
             ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}
             ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-nightly
             ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.version }}
+            ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.major }}
             """
         },
         "github.ref == 'refs/heads/main'"
@@ -82,6 +83,7 @@ jobs = new Mapping {
     ["version"] = new Job {
         outputs = new Mapping {
             ["version"] = "${{ steps.gitversion.outputs.semVer }}"
+            ["major"] = "${{ steps.gitversion.outputs.major }}"
         }
         steps = new Listing {
             base.checkout
