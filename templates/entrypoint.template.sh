@@ -15,8 +15,5 @@ while getopts ":o:" opt; do
   esac
 done
 
-echo "Positional arguments before options: ${pos_args[@]}"
-echo "Remaining arguments after options: $@"
-
 mkdir -p "$output_folder"
 {{ .Env.call }} "${pos_args[@]}" $@
