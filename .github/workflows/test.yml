@@ -37,7 +37,7 @@ jobs:
         load: true
         tags: test/swift:latest
     - run: |-
-        docker run --rm -v "./test-data/:/data" test/swift:latest /data/example.pkl "/data/example space.pkl"  /data/example.out
+        docker run --rm -v "./test-data/:/data" test/swift:latest /data/example.pkl "/data/example space.pkl" /data/example.out
         ls test-data
         ls test-data/example.out
   test-java:
@@ -72,7 +72,7 @@ jobs:
         load: true
         tags: test/java:latest
     - run: |-
-        docker run --rm -v "./test-data/:/data" test/java:latest /data/example.pkl "/data/example space.pkl"  /data/example.out
+        docker run --rm -v "./test-data/:/data" test/java:latest /data/example.pkl  /data/example.out
         ls test-data
         ls test-data/example.out
   test-kotlin:
@@ -107,7 +107,7 @@ jobs:
         load: true
         tags: test/kotlin:latest
     - run: |-
-        docker run --rm -v "./test-data/:/data" test/kotlin:latest /data/example.pkl "/data/example space.pkl"  /data/example.out
+        docker run --rm -v "./test-data/:/data" test/kotlin:latest /data/example.pkl "/data/example space.pkl" /data/example.out
         ls test-data
         ls test-data/example.out
   test-doc:

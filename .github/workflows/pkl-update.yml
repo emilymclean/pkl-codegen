@@ -62,6 +62,12 @@ jobs:
       run: |-
         sed -i 's/hidden currentVersion = "${{ needs.get-current-pkl-version.outputs.current-version }}"/hidden currentVersion = "${{ needs.get-current-pkl-version.outputs.latest-version }}"/g' .github/workflows/base.pkl
         ./build-pkl.sh
+    - name: Setup node for gomplate
+      uses: actions/setup-node@v4
+    - name: Update README and entrypoints
+      run: |-
+        npm install -g gomplate
+        ./fill-templates.sh
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v6
       with:
