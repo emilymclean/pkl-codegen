@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 formatted_args=("${@:1:$#-1}")
 formatted_args+=("-o" "${!#}")
