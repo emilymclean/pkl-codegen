@@ -5,66 +5,6 @@ name: Test Java, Kotlin, and Swift Docker images on latest version
     - main
     - develop
 jobs:
-  test-swift:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-    - name: Get current latest supported pkl version
-      run: |-
-        mapfile -t pklversions < "pkl-versions"
-        echo "PKL_VERSION=${pklversions[-1]}" >> $GITHUB_ENV
-    - name: Read swift-tool-version
-      run: echo "swift_tool_version=$(cat swift/swift-tool-version)" >> $GITHUB_ENV
-    - name: Render template.Dockerfile
-      env:
-        pkl_version: ${{ env.PKL_VERSION }}
-      uses: recih/template-render-action@v1.0.2
-      with:
-        template-file: swift/template.Dockerfile
-        output-file: swift/Dockerfile
-        engine: mustache
-    - name: Render endpoint.sh
-      env:
-        call: LD_LIBRARY_PATH=/usr/share/swift/usr/lib/swift/linux PATH=$PATH:/usr/share/swift/usr/bin/ /pkl-gen-swift
-      uses: recih/template-render-action@v1.0.2
-      with:
-        template-file: templates/entrypoint.template.sh
-        output-file: swift/entrypoint.sh
-        engine: mustache
-    - name: Make endpoint.sh executable
-      run: chmod +x swift/entrypoint.sh
-    - name: Setup QEMU
-      uses: docker/setup-qemu-action@v2
-    - name: Setup Docker Buildx
-      uses: docker/setup-buildx-action@v2
-    - name: Log in to the Container registry
-      uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
-      with:
-        registry: https://ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v4
-      with:
-        context: swift
-        platforms: linux/amd64
-        load: true
-        tags: test/swift:latest
-    - run: |-
-        # Test using new style explicitly listing -o
-        docker run --rm -v "./test-data/:/data" test/swift:latest /data/example.pkl "/data/example space.pkl" -o /data/newstyle-out
-        # Test using old style without -o
-        docker run --rm -v "./test-data/:/data" test/swift:latest /data/example.pkl "/data/example space.pkl" /data/oldstyle-out
-
-        ls test-data
-        echo "Output folder contents:"
-        ls test-data/newstyle-out
-    - uses: actions/upload-artifact@v4
-      with:
-        name: swift-output
-        path: test-data/newstyle-out/
   test-java:
     runs-on: ubuntu-latest
     steps:
@@ -238,4 +178,110 @@ jobs:
     - uses: actions/upload-artifact@v4
       with:
         name: doc-output
+        path: test-data/newstyle-out/
+  test-swift:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Get current latest supported pkl version
+      run: |-
+        mapfile -t pklversions < "pkl-versions"
+        echo "PKL_VERSION=${pklversions[-1]}" >> $GITHUB_ENV
+    - name: Read swift-tool-version
+      run: echo "swift_tool_version=$(cat swift/swift-tool-version)" >> $GITHUB_ENV
+    - name: Render template.Dockerfile
+      env:
+        pkl_version: ${{ env.PKL_VERSION }}
+      uses: recih/template-render-action@v1.0.2
+      with:
+        template-file: swift/template.Dockerfile
+        output-file: swift/Dockerfile
+        engine: mustache
+    - name: Render endpoint.sh
+      env:
+        call: LD_LIBRARY_PATH=/usr/share/swift/usr/lib/swift/linux PATH=$PATH:/usr/share/swift/usr/bin/ /pkl-gen-swift
+      uses: recih/template-render-action@v1.0.2
+      with:
+        template-file: templates/entrypoint.template.sh
+        output-file: swift/entrypoint.sh
+        engine: mustache
+    - name: Make endpoint.sh executable
+      run: chmod +x swift/entrypoint.sh
+    - name: Setup QEMU
+      uses: docker/setup-qemu-action@v2
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    - name: Log in to the Container registry
+      uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+      with:
+        registry: https://ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: swift
+        platforms: linux/amd64
+        load: true
+        tags: test/swift:latest
+    - run: |-
+        # Test using new style explicitly listing -o
+        docker run --rm -v "./test-data/:/data" test/swift:latest /data/example.pkl "/data/example space.pkl" -o /data/newstyle-out
+        # Test using old style without -o
+        docker run --rm -v "./test-data/:/data" test/swift:latest /data/example.pkl "/data/example space.pkl" /data/oldstyle-out
+
+        ls test-data
+        echo "Output folder contents:"
+        ls test-data/newstyle-out
+    - uses: actions/upload-artifact@v4
+      with:
+        name: swift-output
+        path: test-data/newstyle-out/
+  test-go:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Get current latest supported pkl version
+      run: |-
+        mapfile -t pklversions < "pkl-versions"
+        echo "PKL_VERSION=${pklversions[-1]}" >> $GITHUB_ENV
+    - name: Read go-tool-version
+      run: echo "go_tool_version=$(cat go/go-tool-version)" >> $GITHUB_ENV
+    - name: Render template.Dockerfile
+      env:
+        pkl_version: ${{ env.PKL_VERSION }}
+      uses: recih/template-render-action@v1.0.2
+      with:
+        template-file: go/template.Dockerfile
+        output-file: go/Dockerfile
+        engine: mustache
+    - name: Setup QEMU
+      uses: docker/setup-qemu-action@v2
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    - name: Log in to the Container registry
+      uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+      with:
+        registry: https://ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: go
+        platforms: linux/amd64
+        load: true
+        tags: test/go:latest
+    - run: |-
+        docker run --rm -v "./test-data/:/data" test/go:latest /data/example.pkl --mapping example=github.com/emilymclean/pkl-codegen/example --output-path /data/newstyle-out
+
+        echo "Output folder contents:"
+        ls test-data/newstyle-out
+    - uses: actions/upload-artifact@v4
+      with:
+        name: go-output
         path: test-data/newstyle-out/
