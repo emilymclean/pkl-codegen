@@ -23,8 +23,10 @@ while [[ $# -gt 0 ]]; do
   fi
 done
 
-if [[ -z "$output_folder" ]] && [[ ${#args[@]} -gt 0 ]]; then
-  output_folder="${pos_args[-1]}"
+if [[ -z "$output_folder" ]] && [[ ${#pos_args[@]} -gt 0 ]]; then
+  last_index=$((${#pos_args[@]} - 1))
+  output_folder="${pos_args[$last_index]}"
+  unset 'pos_args[$last_index]'
 fi
 
 named_args+=("-o" "$output_folder")
