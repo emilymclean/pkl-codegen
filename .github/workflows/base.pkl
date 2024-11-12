@@ -3,6 +3,13 @@ extends "package://github.com/emilymclean/pkl-github-actions/releases/download/v
 
 hidden supportedVersionLimit = 10
 
+hidden platformCalls = new Mapping {
+    ["swift"] = "LD_LIBRARY_PATH=/usr/share/swift/usr/lib/swift/linux PATH=$PATH:/usr/share/swift/usr/bin/ /pkl-gen-swift"
+    ["kotlin"] = "java -cp /pklgen.jar org.pkl.codegen.kotlin.Main"
+    ["java"] = "java -cp /pklgen.jar org.pkl.codegen.java.Main"
+    ["doc"] = "java -cp /pklgen.jar org.pkl.doc.Main"
+}
+
 hidden checkout = new ActionStep {
     uses = "actions/checkout@v3"
     with = new Mapping {
@@ -18,7 +25,7 @@ function currentVersion(): Step = new CommandStep {
     """
 }
 
-function dockerBuild(withM: Mapping, ifStatement: String?): Listing = new Listing {
+function dockerBuild(withM: Mapping, ifStatement: String?): Listing<Step> = new Listing {
     new ActionStep {
         name = "Build and push Docker image"
         uses = "docker/build-push-action@v4"
@@ -27,7 +34,7 @@ function dockerBuild(withM: Mapping, ifStatement: String?): Listing = new Listin
     }
 }
 
-function dockerSetup(): Listing = new Listing {
+function dockerSetup(): Listing<Step> = new Listing {
     new ActionStep {
         name = "Setup QEMU"
         uses = "docker/setup-qemu-action@v2"
@@ -47,28 +54,47 @@ function dockerSetup(): Listing = new Listing {
     }
 }
 
-function renderForPlatform(platform: String, version: String): ActionStep = if (platform == "swift")
+function renderForPlatform(platform: String, version: String): Listing<Step> = new Listing {
+    if (platform == "swift")
+        new ActionStep {
+            name = "Render template.Dockerfile"
+            uses = "recih/template-render-action@v1.0.2"
+            env = new Mapping {
+                ["pkl_version"] = version
+            }
+            with = new Mapping {
+                ["template-file"] = "swift/template.Dockerfile"
+                ["output-file"] = "swift/Dockerfile"
+                ["engine"] = "mustache"
+            }
+        } 
+    else
+        new ActionStep {
+            name = "Render build.template.gradle"
+            uses = "recih/template-render-action@v1.0.2"
+            env = new Mapping {
+                ["pkl_version"] = version
+            }
+            with = new Mapping {
+                ["template-file"] = "\(platform)/project/build.template.gradle"
+                ["output-file"] = "\(platform)/project/build.gradle"
+                ["engine"] = "mustache"
+            }
+        }
     new ActionStep {
-        name = "Render template.Dockerfile"
+        name = "Render endpoint.sh"
         uses = "recih/template-render-action@v1.0.2"
         env = new Mapping {
-            ["pkl_version"] = version
+            ["call"] = platformCalls[platform]
         }
         with = new Mapping {
-            ["template-file"] = "swift/template.Dockerfile"
-            ["output-file"] = "swift/Dockerfile"
-            ["engine"] = "mustache"
-        }
-    } else
-    new ActionStep {
-        name = "Render build.template.gradle"
-        uses = "recih/template-render-action@v1.0.2"
-        env = new Mapping {
-            ["pkl_version"] = version
-        }
-        with = new Mapping {
-            ["template-file"] = "\(platform)/project/build.template.gradle"
-            ["output-file"] = "\(platform)/project/build.gradle"
+            ["template-file"] = "templates/entrypoint.template.sh"
+            ["output-file"] = "\(platform)/entrypoint.sh"
             ["engine"] = "mustache"
         }
     }
+    new CommandStep {
+        name = "Make endpoint.sh executable"
+        run = "chmod +x \(platform)/entrypoint.sh"
+    }
+}

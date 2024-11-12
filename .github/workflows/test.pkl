@@ -19,8 +19,8 @@ local function testPlatform(platform: String): Job = new Job {
         new Listing {
             base.checkout
             base.currentVersion()
-            base.renderForPlatform(platform, "${{ env.PKL_VERSION }}")
         }.toList() +
+        base.renderForPlatform(platform, "${{ env.PKL_VERSION }}").toList() +
         base.dockerSetup().toList() +
         base.dockerBuild(
             new Mapping {

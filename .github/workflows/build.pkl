@@ -3,6 +3,13 @@ import "base.pkl"
 
 local fatJars = List("java", "kotlin", "doc")
 
+local childRepositories = new Listing {
+    "pkl-java-action"
+    "pkl-swift-action"
+    "pkl-kotlin-action"
+    "pkldoc-action"
+}
+
 local dockerPermissions = new Mapping {
     ["contents"] = "read"
     ["packages"] = "write"
@@ -17,10 +24,13 @@ local function buildFatJarJob(dir: String): Job = new Job {
         matrix = "${{fromJson(needs.pkl-versions.outputs.versions)}}"
     }
     permissions = dockerPermissions
-    steps = (new Listing {
-        base.checkout
-        base.renderForPlatform(dir, "${{ matrix.version }}")
-    }.toList() + docker(dir).toList()).toListing()
+    steps = (
+        new Listing {
+            base.checkout
+        }.toList() + 
+        base.renderForPlatform(dir, "${{ matrix.version }}").toList() +
+        docker(dir).toList()
+    ).toListing()
 }
 
 local function docker(dir: String): Listing = (
@@ -164,9 +174,40 @@ jobs = new Mapping {
             matrix = "${{fromJson(needs.pkl-versions.outputs.versions)}}"
         }
         permissions = dockerPermissions
-        steps = (new Listing {
+        steps = (
+            new Listing {
+                base.checkout
+            }.toList() + 
+            base.renderForPlatform("swift", "${{ matrix.version }}").toList() +
+            docker("swift").toList()
+        ).toListing()
+    }
+    ["update-pkl-actions"] = new Job {
+        `if` = "github.ref == 'refs/heads/main' && github.repository_owner == 'emilymclean'"
+        needs = new Listing {
+            "build-swift"
+            for (fj in fatJars) {
+                "build-\(fj)"
+            }
+        }
+        strategy = new JobStrategy {
+            matrix = new Mapping {
+                ["repo"] = childRepositories
+            }
+        }
+        steps = new Listing {
             base.checkout
-            base.renderForPlatform("swift", "${{ matrix.version }}")
-        }.toList() + docker("swift").toList()).toListing()
+            base.currentVersion()
+            new ActionStep {
+                name = "Update pkl actions that use these images"
+                uses = "benc-uk/workflow-dispatch@v1"
+                with = new Mapping {
+                    ["workflow"] = "update-pkl.yml"
+                    ["repo"] = "emilymclean/${{ matrix.repo }}"
+                    ["token"] = "${{ secrets.WORKER_PAT }}"
+                    ["inputs"] = "{ \"pkl-version\": \"${{ env.PKL_VERSION }}\" }"
+                }
+            }
+        }
     }
 }.toMap().filter((k,v) -> v != null).toMapping()

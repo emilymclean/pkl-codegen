@@ -87,6 +87,16 @@ jobs:
         template-file: java/project/build.template.gradle
         output-file: java/project/build.gradle
         engine: mustache
+    - name: Render endpoint.sh
+      env:
+        call: java -cp /pklgen.jar org.pkl.codegen.java.Main
+      uses: recih/template-render-action@v1.0.2
+      with:
+        template-file: templates/entrypoint.template.sh
+        output-file: java/entrypoint.sh
+        engine: mustache
+    - name: Make endpoint.sh executable
+      run: chmod +x java/entrypoint.sh
     - name: Lowercase repository name
       env:
         REPOSITORY: ${{ github.repository }}
@@ -145,6 +155,16 @@ jobs:
         template-file: kotlin/project/build.template.gradle
         output-file: kotlin/project/build.gradle
         engine: mustache
+    - name: Render endpoint.sh
+      env:
+        call: java -cp /pklgen.jar org.pkl.codegen.kotlin.Main
+      uses: recih/template-render-action@v1.0.2
+      with:
+        template-file: templates/entrypoint.template.sh
+        output-file: kotlin/entrypoint.sh
+        engine: mustache
+    - name: Make endpoint.sh executable
+      run: chmod +x kotlin/entrypoint.sh
     - name: Lowercase repository name
       env:
         REPOSITORY: ${{ github.repository }}
@@ -203,6 +223,16 @@ jobs:
         template-file: doc/project/build.template.gradle
         output-file: doc/project/build.gradle
         engine: mustache
+    - name: Render endpoint.sh
+      env:
+        call: java -cp /pklgen.jar org.pkl.doc.Main
+      uses: recih/template-render-action@v1.0.2
+      with:
+        template-file: templates/entrypoint.template.sh
+        output-file: doc/entrypoint.sh
+        engine: mustache
+    - name: Make endpoint.sh executable
+      run: chmod +x doc/entrypoint.sh
     - name: Lowercase repository name
       env:
         REPOSITORY: ${{ github.repository }}
@@ -261,6 +291,16 @@ jobs:
         template-file: swift/template.Dockerfile
         output-file: swift/Dockerfile
         engine: mustache
+    - name: Render endpoint.sh
+      env:
+        call: LD_LIBRARY_PATH=/usr/share/swift/usr/lib/swift/linux PATH=$PATH:/usr/share/swift/usr/bin/ /pkl-gen-swift
+      uses: recih/template-render-action@v1.0.2
+      with:
+        template-file: templates/entrypoint.template.sh
+        output-file: swift/entrypoint.sh
+        engine: mustache
+    - name: Make endpoint.sh executable
+      run: chmod +x swift/entrypoint.sh
     - name: Lowercase repository name
       env:
         REPOSITORY: ${{ github.repository }}
@@ -297,3 +337,33 @@ jobs:
         tags: |-
           ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}-nightly
           ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}-${{ needs.version.outputs.version }}
+  update-pkl-actions:
+    needs:
+    - build-swift
+    - build-java
+    - build-kotlin
+    - build-doc
+    if: github.ref == 'refs/heads/main' && github.repository_owner == 'emilymclean'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        repo:
+        - pkl-java-action
+        - pkl-swift-action
+        - pkl-kotlin-action
+        - pkldoc-action
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Get current latest supported pkl version
+      run: |-
+        mapfile -t pklversions < "pkl-versions"
+        echo "PKL_VERSION=${pklversions[-1]}" >> $GITHUB_ENV
+    - name: Update pkl actions that use these images
+      uses: benc-uk/workflow-dispatch@v1
+      with:
+        workflow: update-pkl.yml
+        repo: emilymclean/${{ matrix.repo }}
+        token: ${{ secrets.WORKER_PAT }}
+        inputs: '{ "pkl-version": "${{ env.PKL_VERSION }}" }'
