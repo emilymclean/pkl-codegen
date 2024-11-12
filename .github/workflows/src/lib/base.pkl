@@ -88,7 +88,7 @@ function renderForPlatform(platform: Platform, version: String): Listing<Step> =
             """
         }
     else null
-    if (List(PLATFORM_GO, PLATFORM_SWIFT).contains(platform))
+    if (List(PLATFORM_GO).contains(platform))
         new ActionStep {
             name = "Render template.Dockerfile"
             uses = "recih/template-render-action@v1.0.2"
