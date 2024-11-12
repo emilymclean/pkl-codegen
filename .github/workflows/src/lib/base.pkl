@@ -17,7 +17,7 @@ hidden checkout = new ActionStep {
     }
 }
 
-function currentVersion(): Step = new CommandStep {
+hidden currentVersion: Step = new CommandStep {
     name = "Get current latest supported pkl version"
     run = """
     mapfile -t pklversions < "pkl-versions"

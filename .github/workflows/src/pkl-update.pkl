@@ -1,0 +1,19 @@
+amends "lib/file-update-pipeline.pkl"
+import "lib/base.pkl"
+
+represents = "pkl"
+repo = "pkl"
+
+currentVersionStep = base.currentVersion
+currentVersionOutputVar = "PKL_VERSION"
+
+updateStep = (currentVersion: String) -> new CommandStep {
+    name = "Update pkl-versions file with last 10 releases"
+    run = """
+    mapfile -t pklversions < "pkl-versions"
+    pklversions+=("\(currentVersion)")
+    start_index=$(( ${#pklversions[@]} > \(base.supportedVersionLimit) ? ${#pklversions[@]} - \(base.supportedVersionLimit) : 0 ))
+
+    printf "%s\\n" "${pklversions[@]:$start_index}" > pkl-versions
+    """
+}
