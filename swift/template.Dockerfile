@@ -7,7 +7,7 @@ RUN curl -L https://download.swift.org/swift-5.10-release/ubuntu2204/swift-5.10-
         mv swift-5.10-RELEASE-ubuntu22.04 /usr/share/swift
 
 COPY setup.sh /setup.sh
-RUN setup.sh && \
+RUN /setup.sh && \
         rm -rf /setup.sh
 
 COPY entrypoint.sh /entrypoint.sh
