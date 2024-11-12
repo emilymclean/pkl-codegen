@@ -2,6 +2,7 @@ amends "package://github.com/emilymclean/pkl-github-actions/releases/download/v0
 import "lib/base.pkl"
 
 local fatJars = List("java", "kotlin", "doc")
+local platforms = fatJars + List("swift")
 
 local childRepositories = new Listing {
     "pkl-java-action"
@@ -15,11 +16,32 @@ local dockerPermissions = new Mapping {
     ["packages"] = "write"
 }
 
+// Would love to have this as a matrix but that is annoying to read
+local function wasUpdated(dir: String): Job = new Job {
+    outputs = new Mapping {
+        ["any-changed"] = "${{ steps.changed.outputs.any_changed }}"
+    }
+    steps = new Listing {
+        base.checkout
+        new ActionStep {
+            id = "changed"
+            uses = "tj-actions/changed-files@v45"
+            with = new Mapping {
+                ["files"] = """
+                \(dir)/**
+                """
+            }
+        }
+    }
+}
+
 local function buildFatJarJob(dir: String): Job = new Job {
     needs = new Listing {
         "version"
         "pkl-versions"
+        "was-updated-\(dir)"
     }
+    `if` = "needs.was-updated-\(dir).outputs.any-changed == 'true'"
     strategy = new JobStrategy {
         matrix = "${{fromJson(needs.pkl-versions.outputs.versions)}}"
     }
@@ -74,7 +96,7 @@ local function docker(dir: String): Listing = (
      ).toList()
 ).toListing()
 
-name = "Build Java, Kotlin, and Swift Docker images"
+name = "Build Java, Kotlin, Swift, and PklDoc Docker images"
 
 on = new On {
     push = new Push {
@@ -162,6 +184,9 @@ jobs = new Mapping {
             }
         }
     }
+    for (platform in platforms) {
+        ["was-updated-\(platform)"] = wasUpdated(platform)
+    }
     for (fj in fatJars) {
         ["build-\(fj)"] = buildFatJarJob(fj)
     }
@@ -169,7 +194,9 @@ jobs = new Mapping {
         needs = new Listing {
             "version"
             "pkl-versions"
+            "was-updated-swift"
         }
+        `if` = "needs.was-updated-swift.outputs.any-changed == 'true'"
         strategy = new JobStrategy {
             matrix = "${{fromJson(needs.pkl-versions.outputs.versions)}}"
         }
