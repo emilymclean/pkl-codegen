@@ -340,7 +340,7 @@ jobs:
       with:
         fetch-depth: 0
     - name: Read swift-tool-version
-      run: echo "swift_tool_version=$(cat swift/swift-tool-version)"
+      run: echo "swift_tool_version=$(cat swift/swift-tool-version)" >> $GITHUB_ENV
     - name: Render template.Dockerfile
       env:
         pkl_version: ${{ matrix.version }}
