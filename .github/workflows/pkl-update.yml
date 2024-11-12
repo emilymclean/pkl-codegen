@@ -17,7 +17,6 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-        ref: main
     - name: Get current latest supported pkl version
       run: |-
         mapfile -t pklversions < "pkl-versions"
@@ -46,7 +45,6 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-        ref: main
     - name: Install pkl
       uses: pkl-community/setup-pkl@v0
       with:
@@ -58,10 +56,6 @@ jobs:
         start_index=$(( ${#pklversions[@]} > 10 ? ${#pklversions[@]} - 10 : 0 ))
 
         printf "%s\n" "${pklversions[@]:$start_index}" > pkl-versions
-    - name: Update currentVersion in base.pkl
-      run: |-
-        sed -i 's/hidden currentVersion = "${{ needs.get-current-pkl-version.outputs.current-version }}"/hidden currentVersion = "${{ needs.get-current-pkl-version.outputs.latest-version }}"/g' .github/workflows/base.pkl
-        ./build-pkl.sh
     - name: Setup node for gomplate
       uses: actions/setup-node@v4
     - name: Update README and entrypoints

@@ -7,7 +7,6 @@ local checkout = new ActionStep {
     uses = "actions/checkout@v3"
     with = new Mapping {
         ["fetch-depth"] = 0
-        ["ref"] = "main"
     }
 }
 
@@ -36,13 +35,7 @@ jobs = new Mapping {
         }
         steps = new Listing {
             checkout
-            new CommandStep {
-                name = "Get current latest supported pkl version"
-                run = """
-                mapfile -t pklversions < "pkl-versions"
-                echo "PKL_VERSION=${pklversions[-1]}" >> $GITHUB_ENV
-                """
-            }
+            base.currentVersion()
             new ActionStep {
                 name = "Get latest pkl version"
                 id = "pkl-release"
@@ -89,13 +82,6 @@ jobs = new Mapping {
                 start_index=$(( ${#pklversions[@]} > \(base.supportedVersionLimit) ? ${#pklversions[@]} - \(base.supportedVersionLimit) : 0 ))
 
                 printf "%s\\n" "${pklversions[@]:$start_index}" > pkl-versions
-                """
-            }
-            new CommandStep {
-                name = "Update currentVersion in base.pkl"
-                run = """
-                sed -i 's/hidden currentVersion = "${{ needs.\(versionJobName).outputs.current-version }}"/hidden currentVersion = "${{ needs.\(versionJobName).outputs.latest-version }}"/g' .github/workflows/base.pkl
-                ./build-pkl.sh
                 """
             }
             new ActionStep {
