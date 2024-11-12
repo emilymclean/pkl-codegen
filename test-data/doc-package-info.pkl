@@ -1,0 +1,11 @@
+/// This is an example package
+amends "pkl:DocPackageInfo"
+
+name = "test"
+version = "1.2.3"
+importUri = "modulepath:/test/"
+authors {
+  "emilymclean@fakeemail.com"
+}
+sourceCode = "https://www.example.com/my/source"
+issueTracker = "https://www.example.com/my/issues"

@@ -20,10 +20,16 @@ on = new On {
             cron = "0 13 * * 1"
         }
     }
+    pull_request = new PullRequest {
+        branches = new Listing {
+            "main"
+            "develop"
+        }
+    }
 }
 
 jobs = new Mapping {
-    ["get-current-pkl-version"] = new Job {
+    [versionJobName] = new Job {
         outputs = new Mapping {
             ["current-version"] = "${{ env.PKL_VERSION }}"
             ["latest-version"] = "${{ steps.pkl-release.outputs.release }}"
@@ -47,13 +53,21 @@ jobs = new Mapping {
                     ["excludes"] = "prerelease, draft"
                 }
             }
+            new CommandStep {
+                name = "Job Summary"
+                run = """
+                echo "### Versions" >> $GITHUB_STEP_SUMMARY
+                echo "Current version: ${{ env.PKL_VERSION }}" >> $GITHUB_STEP_SUMMARY
+                echo "Latest version: ${{ steps.pkl-release.outputs.release }}" >> $GITHUB_STEP_SUMMARY
+                """
+            }
         }
     }
     ["update-pkl-pipeline"] = new Job {
         needs = new Listing {
             versionJobName
         }
-        `if` = "needs.\(versionJobName).outputs.current-version != needs.\(versionJobName).outputs.latest-version"
+        `if` = "needs.\(versionJobName).outputs.current-version != needs.\(versionJobName).outputs.latest-version && github.event_name != 'pull_request'"
         permissions = new Mapping {
             ["contents"] = "write"
             ["pull-requests"] = "write"

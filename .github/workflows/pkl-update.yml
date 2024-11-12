@@ -1,5 +1,9 @@
 name: Update build to include the latest Pkl releases
 'on':
+  pull_request:
+    branches:
+    - main
+    - develop
   schedule:
   - cron: 0 13 * * 1
   workflow_dispatch: {}
@@ -25,13 +29,18 @@ jobs:
         owner: apple
         repo: pkl
         excludes: prerelease, draft
+    - name: Job Summary
+      run: |-
+        echo "### Versions" >> $GITHUB_STEP_SUMMARY
+        echo "Current version: ${{ env.PKL_VERSION }}" >> $GITHUB_STEP_SUMMARY
+        echo "Latest version: ${{ steps.pkl-release.outputs.release }}" >> $GITHUB_STEP_SUMMARY
   update-pkl-pipeline:
     permissions:
       contents: write
       pull-requests: write
     needs:
     - get-current-pkl-version
-    if: needs.get-current-pkl-version.outputs.current-version != needs.get-current-pkl-version.outputs.latest-version
+    if: needs.get-current-pkl-version.outputs.current-version != needs.get-current-pkl-version.outputs.latest-version && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
