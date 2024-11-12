@@ -80,20 +80,6 @@ function renderForPlatform(platform: Platform, version: String): Listing<Step> =
             """
         }
     else null
-    if (platform == PLATFORM_SWIFT)
-        new ActionStep {
-            name = "Render template.Dockerfile"
-            uses = "recih/template-render-action@v1.0.2"
-            env = new Mapping {
-                ["pkl_version"] = version
-            }
-            with = new Mapping {
-                ["template-file"] = "swift/template.Dockerfile"
-                ["output-file"] = "swift/Dockerfile"
-                ["engine"] = "mustache"
-            }
-        } 
-    else null
     if (platform == PLATFORM_GO)
         new CommandStep {
             name = "Read go-tool-version"
@@ -102,7 +88,7 @@ function renderForPlatform(platform: Platform, version: String): Listing<Step> =
             """
         }
     else null
-    if (platform == PLATFORM_GO)
+    if (List(PLATFORM_GO, PLATFORM_SWIFT).contains(platform))
         new ActionStep {
             name = "Render template.Dockerfile"
             uses = "recih/template-render-action@v1.0.2"
@@ -110,10 +96,30 @@ function renderForPlatform(platform: Platform, version: String): Listing<Step> =
                 ["pkl_version"] = version
             }
             with = new Mapping {
-                ["template-file"] = "go/template.Dockerfile"
-                ["output-file"] = "go/Dockerfile"
+                ["template-file"] = "\(platform)/template.Dockerfile"
+                ["output-file"] = "\(platform)/Dockerfile"
                 ["engine"] = "mustache"
             }
+        }
+    else null
+    if (List(PLATFORM_GO, PLATFORM_SWIFT).contains(platform))
+        new ActionStep {
+            name = "Render setup.template.sh"
+            uses = "recih/template-render-action@v1.0.2"
+            env = new Mapping {
+                ["pkl_version"] = version
+            }
+            with = new Mapping {
+                ["template-file"] = "\(platform)/setup.template.sh"
+                ["output-file"] = "\(platform)/setup.sh"
+                ["engine"] = "mustache"
+            }
+        }
+    else null
+    if (List(PLATFORM_GO, PLATFORM_SWIFT).contains(platform))
+        new CommandStep {
+            name = "Make setup.sh executable"
+            run = "chmod +x \(platform)/setup.sh"
         }
     else null
     if (!List(PLATFORM_GO, PLATFORM_SWIFT).contains(platform))
