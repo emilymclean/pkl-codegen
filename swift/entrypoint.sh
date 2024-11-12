@@ -25,8 +25,10 @@ done
 
 if [[ -z "$output_folder" ]] && [[ ${#args[@]} -gt 0 ]]; then
   output_folder="${pos_args[-1]}"
-  named_args+=("-o" "$output_folder")
 fi
 
+named_args+=("-o" "$output_folder")
+
 mkdir -p "$output_folder"
+
 LD_LIBRARY_PATH=/usr/share/swift/usr/lib/swift/linux PATH=$PATH:/usr/share/swift/usr/bin/ /pkl-gen-swift "${pos_args[@]}" "${named_args[@]}"

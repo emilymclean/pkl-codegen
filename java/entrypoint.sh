@@ -25,8 +25,10 @@ done
 
 if [[ -z "$output_folder" ]] && [[ ${#args[@]} -gt 0 ]]; then
   output_folder="${pos_args[-1]}"
-  named_args+=("-o" "$output_folder")
 fi
 
+named_args+=("-o" "$output_folder")
+
 mkdir -p "$output_folder"
+
 java -cp /pklgen.jar org.pkl.codegen.java.Main "${pos_args[@]}" "${named_args[@]}"
