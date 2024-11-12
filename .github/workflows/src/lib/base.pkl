@@ -1,13 +1,29 @@
 open module base
 extends "package://github.com/emilymclean/pkl-github-actions/releases/download/v0.1.0-alpha.96/pkl-github-actions@0.1.0-alpha.96#/actions.pkl"
 
+hidden const PLATFORM_JAVA = "java"
+hidden const PLATFORM_KOTLIN = "kotlin"
+hidden const PLATFORM_SWIFT = "swift"
+hidden const PLATFORM_PKLDOC = "doc"
+hidden const PLATFORM_GO = "go"
+
+typealias Platform = "java"|"kotlin"|"swift"|"doc"|"go"
+
+hidden const PLATFORMS = new Listing {
+    PLATFORM_JAVA
+    PLATFORM_KOTLIN
+    PLATFORM_PKLDOC 
+    PLATFORM_SWIFT
+    PLATFORM_GO
+}
+
 hidden supportedVersionLimit = 10
 
-hidden platformCalls = new Mapping {
-    ["swift"] = "LD_LIBRARY_PATH=/usr/share/swift/usr/lib/swift/linux PATH=$PATH:/usr/share/swift/usr/bin/ /pkl-gen-swift"
-    ["kotlin"] = "java -cp /pklgen.jar org.pkl.codegen.kotlin.Main"
-    ["java"] = "java -cp /pklgen.jar org.pkl.codegen.java.Main"
-    ["doc"] = "java -cp /pklgen.jar org.pkl.doc.Main"
+hidden platformCalls = new Mapping<Platform, String> {
+    [PLATFORM_SWIFT] = "LD_LIBRARY_PATH=/usr/share/swift/usr/lib/swift/linux PATH=$PATH:/usr/share/swift/usr/bin/ /pkl-gen-swift"
+    [PLATFORM_KOTLIN] = "java -cp /pklgen.jar org.pkl.codegen.kotlin.Main"
+    [PLATFORM_JAVA] = "java -cp /pklgen.jar org.pkl.codegen.java.Main"
+    [PLATFORM_PKLDOC] = "java -cp /pklgen.jar org.pkl.doc.Main"
 }
 
 hidden checkout = new ActionStep {
@@ -54,17 +70,17 @@ function dockerSetup(): Listing<Step> = new Listing {
     }
 }
 
-function renderForPlatform(platform: String, version: String): Listing<Step> = new Listing {
-    if (platform == "swift")
+function renderForPlatform(platform: Platform, version: String): Listing<Step> = new Listing {
+    // Please apple, let me use list expansion as the result of an if
+    if (platform == PLATFORM_SWIFT)
         new CommandStep {
             name = "Read swift-tool-version"
             run = """
             echo "swift_tool_version=$(cat swift/swift-tool-version)" >> $GITHUB_ENV
             """
         }
-    else 
-        null 
-    if (platform == "swift")
+    else null
+    if (platform == PLATFORM_SWIFT)
         new ActionStep {
             name = "Render template.Dockerfile"
             uses = "recih/template-render-action@v1.0.2"
@@ -77,7 +93,30 @@ function renderForPlatform(platform: String, version: String): Listing<Step> = n
                 ["engine"] = "mustache"
             }
         } 
-    else
+    else null
+    if (platform == PLATFORM_GO)
+        new CommandStep {
+            name = "Read go-tool-version"
+            run = """
+            echo "go_tool_version=$(cat go/go-tool-version)" >> $GITHUB_ENV
+            """
+        }
+    else null
+    if (platform == PLATFORM_GO)
+        new ActionStep {
+            name = "Render template.Dockerfile"
+            uses = "recih/template-render-action@v1.0.2"
+            env = new Mapping {
+                ["pkl_version"] = version
+            }
+            with = new Mapping {
+                ["template-file"] = "go/template.Dockerfile"
+                ["output-file"] = "go/Dockerfile"
+                ["engine"] = "mustache"
+            }
+        }
+    else null
+    if (!List(PLATFORM_GO, PLATFORM_SWIFT).contains(platform))
         new ActionStep {
             name = "Render build.template.gradle"
             uses = "recih/template-render-action@v1.0.2"
@@ -90,20 +129,25 @@ function renderForPlatform(platform: String, version: String): Listing<Step> = n
                 ["engine"] = "mustache"
             }
         }
-    new ActionStep {
-        name = "Render endpoint.sh"
-        uses = "recih/template-render-action@v1.0.2"
-        env = new Mapping {
-            ["call"] = platformCalls[platform]
+    else null
+    if (platform != PLATFORM_GO)
+        new ActionStep {
+            name = "Render endpoint.sh"
+            uses = "recih/template-render-action@v1.0.2"
+            env = new Mapping {
+                ["call"] = platformCalls[platform]
+            }
+            with = new Mapping {
+                ["template-file"] = "templates/entrypoint.template.sh"
+                ["output-file"] = "\(platform)/entrypoint.sh"
+                ["engine"] = "mustache"
+            }
         }
-        with = new Mapping {
-            ["template-file"] = "templates/entrypoint.template.sh"
-            ["output-file"] = "\(platform)/entrypoint.sh"
-            ["engine"] = "mustache"
+    else null
+    if (platform != PLATFORM_GO)
+        new CommandStep {
+            name = "Make endpoint.sh executable"
+            run = "chmod +x \(platform)/entrypoint.sh"
         }
-    }
-    new CommandStep {
-        name = "Make endpoint.sh executable"
-        run = "chmod +x \(platform)/entrypoint.sh"
-    }
+    else null
 }.toList().filterNonNull().toListing()

@@ -1,0 +1,68 @@
+name: Update build to include the latest go-tool releases
+'on':
+  pull_request:
+    branches:
+    - main
+    - develop
+  schedule:
+  - cron: 0 13 * * 1
+  workflow_dispatch: {}
+jobs:
+  get-current-version:
+    runs-on: ubuntu-latest
+    outputs:
+      current-version: ${{ env.GO_TOOL_VERSION }}
+      latest-version: ${{ steps.tool-release.outputs.release }}
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Get current go tool version
+      run: echo "GO_TOOL_VERSION=$(cat go/go-tool-version)" >> $GITHUB_ENV
+    - id: tool-release
+      name: Get latest go-tool version
+      uses: pozetroninc/github-action-get-latest-release@master
+      with:
+        owner: apple
+        repo: pkl-go
+        excludes: prerelease, draft
+    - name: Job Summary
+      run: |-
+        echo "### Versions" >> $GITHUB_STEP_SUMMARY
+        echo "Current version: ${{ env.GO_TOOL_VERSION }}" >> $GITHUB_STEP_SUMMARY
+        echo "Latest version: ${{ steps.pkl-release.outputs.release }}" >> $GITHUB_STEP_SUMMARY
+  update-go-tool-version:
+    permissions:
+      contents: write
+      pull-requests: write
+    needs:
+    - get-current-version
+    if: needs.get-current-version.outputs.current-version != needs.get-current-version.outputs.latest-version && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Update go/go-tool-version file with latest release
+      run: echo "${{ needs.get-current-version.outputs.latest-version }}" > go/go-tool-version
+    - name: Setup node for gomplate
+      uses: actions/setup-node@v4
+    - name: Update README and entrypoints
+      run: |-
+        npm install -g gomplate
+        ./render-templates.sh
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v7
+      with:
+        branch: update-go-tool/feature/${{ needs.get-current-version.outputs.latest-version }}-pkl-lang
+        title: Update go-tool from ${{ needs.get-current-version.outputs.current-version }} to ${{ needs.get-current-version.outputs.latest-version }}
+        assignees: emilymclean
+        reviewers: emilymclean
+        token: ${{ secrets.WORKER_PAT }}
+  keep-alive:
+    permissions:
+      actions: write
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: liskin/gh-workflow-keepalive@v1

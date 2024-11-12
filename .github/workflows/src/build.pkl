@@ -1,9 +1,6 @@
 amends "package://github.com/emilymclean/pkl-github-actions/releases/download/v0.1.0-alpha.96/pkl-github-actions@0.1.0-alpha.96#/actions.pkl"
 import "lib/base.pkl"
 
-local fatJars = List("java", "kotlin", "doc")
-local platforms = fatJars + List("swift")
-
 local childRepositories = new Listing {
     "pkl-java-action"
     "pkl-swift-action"
@@ -35,7 +32,7 @@ local function wasUpdated(dir: String): Job = new Job {
     }
 }
 
-local function buildFatJarJob(dir: String): Job = new Job {
+local function buildJob(dir: String): Job = new Job {
     needs = new Listing {
         "version"
         "pkl-versions"
@@ -46,16 +43,14 @@ local function buildFatJarJob(dir: String): Job = new Job {
         matrix = "${{fromJson(needs.pkl-versions.outputs.versions)}}"
     }
     permissions = dockerPermissions
-    steps = (
-        new Listing {
-            base.checkout
-        }.toList() + 
-        base.renderForPlatform(dir, "${{ matrix.version }}").toList() +
-        docker(dir).toList()
-    ).toListing()
+    steps = new Listing {
+        base.checkout
+        ...base.renderForPlatform(dir, "${{ matrix.version }}")
+        ...docker(dir)
+    }
 }
 
-local function docker(dir: String): Listing = (
+local function docker(dir: String): Listing =
     new Listing {
         new CommandStep {
             name = "Lowercase repository name"
@@ -66,35 +61,36 @@ local function docker(dir: String): Listing = (
                 ["REPOSITORY"] = "${{ github.repository }}"
             }
         }
-     }.toList() + 
-     base.dockerSetup().toList() +
-     base.dockerBuild(
-        new Mapping {
-            ["context"] = dir
-            ["platforms"] = "linux/amd64,linux/arm64/v8"
-            ["push"] = true
-            ["tags"] = """
-            ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}
-            ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-nightly
-            ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.version }}
-            ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.major }}
-            """
-        },
-        "github.ref == 'refs/heads/main'"
-     ).toList() +
-     base.dockerBuild(
-        new Mapping {
-            ["context"] = dir
-            ["platforms"] = "linux/amd64,linux/arm64/v8"
-            ["push"] = true
-            ["tags"] = """
-            ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-nightly
-            ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.version }}
-            """
-        },
-        "github.ref != 'refs/heads/main'"
-     ).toList()
-).toListing()
+        ...base.dockerSetup()
+        ...base.dockerBuild(
+            new Mapping {
+                ["context"] = dir
+                ["platforms"] = "linux/amd64,linux/arm64/v8"
+                ["push"] = true
+                ["tags"] = """
+                ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}
+                ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-nightly
+                ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
+                ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.version }}
+                ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.major }}
+                """
+            },
+            "github.ref == 'refs/heads/main'"
+        )
+        ...base.dockerBuild(
+            new Mapping {
+                ["context"] = dir
+                ["platforms"] = "linux/amd64,linux/arm64/v8"
+                ["push"] = true
+                ["tags"] = """
+                ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-nightly
+                ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
+                ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.version }}
+                """
+            },
+            "github.ref != 'refs/heads/main'"
+        )
+     }
 
 name = "Build Java, Kotlin, Swift, and PklDoc Docker images"
 
@@ -184,37 +180,17 @@ jobs = new Mapping {
             }
         }
     }
-    for (platform in platforms) {
+    for (platform in base.PLATFORMS) {
         ["was-updated-\(platform)"] = wasUpdated(platform)
     }
-    for (fj in fatJars) {
-        ["build-\(fj)"] = buildFatJarJob(fj)
-    }
-    ["build-swift"] = new Job {
-        needs = new Listing {
-            "version"
-            "pkl-versions"
-            "was-updated-swift"
-        }
-        `if` = "needs.was-updated-swift.outputs.any-changed == 'true'"
-        strategy = new JobStrategy {
-            matrix = "${{fromJson(needs.pkl-versions.outputs.versions)}}"
-        }
-        permissions = dockerPermissions
-        steps = (
-            new Listing {
-                base.checkout
-            }.toList() + 
-            base.renderForPlatform("swift", "${{ matrix.version }}").toList() +
-            docker("swift").toList()
-        ).toListing()
+    for (platform in base.PLATFORMS) {
+        ["build-\(platform)"] = buildJob(platform)
     }
     ["update-pkl-actions"] = new Job {
         `if` = "github.ref == 'refs/heads/main' && github.repository_owner == 'emilymclean'"
         needs = new Listing {
-            "build-swift"
-            for (fj in fatJars) {
-                "build-\(fj)"
+            for (platform in base.PLATFORMS) {
+                "build-\(platform)"
             }
         }
         strategy = new JobStrategy {

@@ -113,6 +113,18 @@ jobs:
       uses: tj-actions/changed-files@v45
       with:
         files: swift/**
+  was-updated-go:
+    runs-on: ubuntu-latest
+    outputs:
+      any-changed: ${{ steps.changed.outputs.any_changed }}
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - id: changed
+      uses: tj-actions/changed-files@v45
+      with:
+        files: go/**
   build-java:
     permissions:
       contents: read
@@ -171,6 +183,7 @@ jobs:
         tags: |-
           ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}
           ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}-nightly
+          ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
           ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}-${{ needs.version.outputs.version }}
           ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}-${{ needs.version.outputs.major }}
     - name: Build and push Docker image
@@ -182,6 +195,7 @@ jobs:
         push: true
         tags: |-
           ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}-nightly
+          ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
           ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}-${{ needs.version.outputs.version }}
   build-kotlin:
     permissions:
@@ -241,6 +255,7 @@ jobs:
         tags: |-
           ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}
           ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}-nightly
+          ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
           ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}-${{ needs.version.outputs.version }}
           ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}-${{ needs.version.outputs.major }}
     - name: Build and push Docker image
@@ -252,6 +267,7 @@ jobs:
         push: true
         tags: |-
           ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}-nightly
+          ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
           ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}-${{ needs.version.outputs.version }}
   build-doc:
     permissions:
@@ -311,6 +327,7 @@ jobs:
         tags: |-
           ghcr.io/${{ env.REPOSITORY_LC }}-doc:${{ matrix.version }}
           ghcr.io/${{ env.REPOSITORY_LC }}-doc:${{ matrix.version }}-nightly
+          ghcr.io/${{ env.REPOSITORY_LC }}-doc:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
           ghcr.io/${{ env.REPOSITORY_LC }}-doc:${{ matrix.version }}-${{ needs.version.outputs.version }}
           ghcr.io/${{ env.REPOSITORY_LC }}-doc:${{ matrix.version }}-${{ needs.version.outputs.major }}
     - name: Build and push Docker image
@@ -322,6 +339,7 @@ jobs:
         push: true
         tags: |-
           ghcr.io/${{ env.REPOSITORY_LC }}-doc:${{ matrix.version }}-nightly
+          ghcr.io/${{ env.REPOSITORY_LC }}-doc:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
           ghcr.io/${{ env.REPOSITORY_LC }}-doc:${{ matrix.version }}-${{ needs.version.outputs.version }}
   build-swift:
     permissions:
@@ -383,6 +401,7 @@ jobs:
         tags: |-
           ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}
           ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}-nightly
+          ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
           ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}-${{ needs.version.outputs.version }}
           ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}-${{ needs.version.outputs.major }}
     - name: Build and push Docker image
@@ -394,13 +413,79 @@ jobs:
         push: true
         tags: |-
           ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}-nightly
+          ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
           ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}-${{ needs.version.outputs.version }}
+  build-go:
+    permissions:
+      contents: read
+      packages: write
+    needs:
+    - version
+    - pkl-versions
+    - was-updated-go
+    if: needs.was-updated-go.outputs.any-changed == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{fromJson(needs.pkl-versions.outputs.versions)}}
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Read go-tool-version
+      run: echo "go_tool_version=$(cat go/go-tool-version)" >> $GITHUB_ENV
+    - name: Render template.Dockerfile
+      env:
+        pkl_version: ${{ matrix.version }}
+      uses: recih/template-render-action@v1.0.2
+      with:
+        template-file: go/template.Dockerfile
+        output-file: go/Dockerfile
+        engine: mustache
+    - name: Lowercase repository name
+      env:
+        REPOSITORY: ${{ github.repository }}
+      run: echo "REPOSITORY_LC=${REPOSITORY,,}" >> ${GITHUB_ENV}
+    - name: Setup QEMU
+      uses: docker/setup-qemu-action@v2
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    - name: Log in to the Container registry
+      uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+      with:
+        registry: https://ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build and push Docker image
+      if: github.ref == 'refs/heads/main'
+      uses: docker/build-push-action@v4
+      with:
+        context: go
+        platforms: linux/amd64,linux/arm64/v8
+        push: true
+        tags: |-
+          ghcr.io/${{ env.REPOSITORY_LC }}-go:${{ matrix.version }}
+          ghcr.io/${{ env.REPOSITORY_LC }}-go:${{ matrix.version }}-nightly
+          ghcr.io/${{ env.REPOSITORY_LC }}-go:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
+          ghcr.io/${{ env.REPOSITORY_LC }}-go:${{ matrix.version }}-${{ needs.version.outputs.version }}
+          ghcr.io/${{ env.REPOSITORY_LC }}-go:${{ matrix.version }}-${{ needs.version.outputs.major }}
+    - name: Build and push Docker image
+      if: github.ref != 'refs/heads/main'
+      uses: docker/build-push-action@v4
+      with:
+        context: go
+        platforms: linux/amd64,linux/arm64/v8
+        push: true
+        tags: |-
+          ghcr.io/${{ env.REPOSITORY_LC }}-go:${{ matrix.version }}-nightly
+          ghcr.io/${{ env.REPOSITORY_LC }}-go:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
+          ghcr.io/${{ env.REPOSITORY_LC }}-go:${{ matrix.version }}-${{ needs.version.outputs.version }}
   update-pkl-actions:
     needs:
-    - build-swift
     - build-java
     - build-kotlin
     - build-doc
+    - build-swift
+    - build-go
     if: github.ref == 'refs/heads/main' && github.repository_owner == 'emilymclean'
     runs-on: ubuntu-latest
     strategy:
