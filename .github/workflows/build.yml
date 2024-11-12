@@ -76,7 +76,10 @@ jobs:
     - id: changed
       uses: tj-actions/changed-files@v45
       with:
-        files: java/**
+        files: |-
+          java/**
+          templates/entrypoint.template.sh
+          pkl-versions
   was-updated-kotlin:
     runs-on: ubuntu-latest
     outputs:
@@ -88,7 +91,10 @@ jobs:
     - id: changed
       uses: tj-actions/changed-files@v45
       with:
-        files: kotlin/**
+        files: |-
+          kotlin/**
+          templates/entrypoint.template.sh
+          pkl-versions
   was-updated-doc:
     runs-on: ubuntu-latest
     outputs:
@@ -100,7 +106,10 @@ jobs:
     - id: changed
       uses: tj-actions/changed-files@v45
       with:
-        files: doc/**
+        files: |-
+          doc/**
+          templates/entrypoint.template.sh
+          pkl-versions
   was-updated-swift:
     runs-on: ubuntu-latest
     outputs:
@@ -112,7 +121,10 @@ jobs:
     - id: changed
       uses: tj-actions/changed-files@v45
       with:
-        files: swift/**
+        files: |-
+          swift/**
+          templates/entrypoint.template.sh
+          pkl-versions
   was-updated-go:
     runs-on: ubuntu-latest
     outputs:
@@ -124,7 +136,10 @@ jobs:
     - id: changed
       uses: tj-actions/changed-files@v45
       with:
-        files: go/**
+        files: |-
+          go/**
+          templates/entrypoint.template.sh
+          pkl-versions
   build-java:
     permissions:
       contents: read
