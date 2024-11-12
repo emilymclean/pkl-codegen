@@ -1,4 +1,7 @@
 #!/bin/sh
 
-mkdir -p "$2"
-java -cp /pklgen.jar org.pkl.doc.Main "$1" -o "$2"
+formatted_args=("${@:1:$#-1}")
+formatted_args+=("-o" "${!#}")
+
+mkdir -p "${!#}"
+java -cp /pklgen.jar org.pkl.doc.Main "${formatted_args[@]}"

@@ -99,6 +99,17 @@ jobs = new Mapping {
                 """
             }
             new ActionStep {
+                name = "Setup node for gomplate"
+                uses = "actions/setup-node@v4"
+            }
+            new CommandStep {
+                name = "Update README and entrypoints"
+                run = """
+                npm install -g gomplate
+                ./fill-templates.sh
+                """
+            }
+            new ActionStep {
                 name = "Create Pull Request"
                 uses = "peter-evans/create-pull-request@v6"
                 with = new Mapping {

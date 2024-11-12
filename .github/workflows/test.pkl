@@ -3,6 +3,18 @@ import "base.pkl"
 
 local platforms = List("swift", "java", "kotlin", "doc")
 
+local generalExtraFiles = new Listing<String> {}.toList()
+
+local docExtraFiles = new Listing<String> {
+    "/data/doc-package-info.pkl"
+}.toList()
+
+local function testString(platform: String, extraFiles: List<String>): String = """
+docker run --rm -v "./test-data/:/data" test/\(platform):latest /data/example.pkl "/data/example space.pkl" \(if(extraFiles.length > 0) extraFiles.join(" ") else "") /data/example.out
+ls test-data
+ls test-data/example.out
+"""
+
 local function testPlatform(platform: String): Job = new Job {
     steps = (
         new Listing {
@@ -22,13 +34,14 @@ local function testPlatform(platform: String): Job = new Job {
             null
         ).toList() +
         new Listing {
-            new CommandStep {
-                run = """
-                docker run --rm -v "./test-data/:/data" test/\(platform):latest /data/example.pkl /data/example.out
-                ls test-data
-                ls test-data/example.out
-                """
-            }
+            if (platform != "doc")
+                new CommandStep {
+                    run = testString(platform, generalExtraFiles)
+                }
+            else
+                new CommandStep {
+                    run = testString(platform, docExtraFiles)
+                }
         }.toList()
     ).toListing()
 }
