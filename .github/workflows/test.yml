@@ -39,7 +39,12 @@ jobs:
     - run: |-
         docker run --rm -v "./test-data/:/data" test/swift:latest /data/example.pkl "/data/example space.pkl" /data/example.out
         ls test-data
+        echo "Output folder contents:"
         ls test-data/example.out
+    - uses: actions/upload-artifact@v4
+      with:
+        name: swift-output
+        path: test-data/example.out/
   test-java:
     runs-on: ubuntu-latest
     steps:
@@ -74,7 +79,12 @@ jobs:
     - run: |-
         docker run --rm -v "./test-data/:/data" test/java:latest /data/example.pkl  /data/example.out
         ls test-data
+        echo "Output folder contents:"
         ls test-data/example.out
+    - uses: actions/upload-artifact@v4
+      with:
+        name: java-output
+        path: test-data/example.out/
   test-kotlin:
     runs-on: ubuntu-latest
     steps:
@@ -109,7 +119,12 @@ jobs:
     - run: |-
         docker run --rm -v "./test-data/:/data" test/kotlin:latest /data/example.pkl "/data/example space.pkl" /data/example.out
         ls test-data
+        echo "Output folder contents:"
         ls test-data/example.out
+    - uses: actions/upload-artifact@v4
+      with:
+        name: kotlin-output
+        path: test-data/example.out/
   test-doc:
     runs-on: ubuntu-latest
     steps:
@@ -144,4 +159,9 @@ jobs:
     - run: |-
         docker run --rm -v "./test-data/:/data" test/doc:latest /data/example.pkl "/data/example space.pkl" /data/doc-package-info.pkl /data/example.out
         ls test-data
+        echo "Output folder contents:"
         ls test-data/example.out
+    - uses: actions/upload-artifact@v4
+      with:
+        name: doc-output
+        path: test-data/example.out/
