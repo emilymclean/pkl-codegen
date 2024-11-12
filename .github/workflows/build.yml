@@ -373,7 +373,7 @@ jobs:
       uses: recih/template-render-action@v1.0.2
       with:
         template-file: swift/setup.template.sh
-        output-file: swift/Dockerfile
+        output-file: swift/setup.sh
         engine: mustache
     - name: Make setup.sh executable
       run: chmod +x swift/setup.sh
@@ -457,7 +457,7 @@ jobs:
       uses: recih/template-render-action@v1.0.2
       with:
         template-file: go/setup.template.sh
-        output-file: go/Dockerfile
+        output-file: go/setup.sh
         engine: mustache
     - name: Make setup.sh executable
       run: chmod +x go/setup.sh

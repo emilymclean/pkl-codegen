@@ -111,7 +111,7 @@ function renderForPlatform(platform: Platform, version: String): Listing<Step> =
             }
             with = new Mapping {
                 ["template-file"] = "\(platform)/setup.template.sh"
-                ["output-file"] = "\(platform)/Dockerfile"
+                ["output-file"] = "\(platform)/setup.sh"
                 ["engine"] = "mustache"
             }
         }
