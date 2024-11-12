@@ -1,0 +1,20 @@
+amends "lib/file-update-pipeline.pkl"
+import "lib/base.pkl"
+
+represents = "swift-tool"
+repo = "pkl-swift"
+
+currentVersionStep = new CommandStep {
+    name = "Get current swift tool version"
+    run = """
+    echo "SWIFT_TOOL_VERSION=$(cat swift/swift-tool-version)" >> $GITHUB_ENV
+    """
+}
+currentVersionOutputVar = "SWIFT_TOOL_VERSION"
+
+updateStep = (currentVersion: String) -> new CommandStep {
+    name = "Update swift/swift-tool-version file with latest release"
+    run = """
+    echo "\(currentVersion)" > swift/swift-tool-version
+    """
+}

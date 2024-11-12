@@ -10,7 +10,7 @@ RUN curl -L -o /pkl https://github.com/apple/pkl/releases/download/{{{ env.pkl_v
         chmod +x /pkl && \
         mv pkl /usr/share/swift/usr/bin/pkl
 
-RUN curl -L https://github.com/apple/pkl-swift/releases/download/0.2.1/pkl-gen-swift-linux-amd64.bin -o /pkl-gen-swift && \
+RUN curl -L https://github.com/apple/pkl-swift/releases/download/{{{ env.swift_tool_version }}}/pkl-gen-swift-linux-amd64.bin -o /pkl-gen-swift && \
         chmod +x /pkl-gen-swift
 
 COPY entrypoint.sh /entrypoint.sh
