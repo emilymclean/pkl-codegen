@@ -367,6 +367,16 @@ jobs:
         template-file: swift/template.Dockerfile
         output-file: swift/Dockerfile
         engine: mustache
+    - name: Render setup.template.sh
+      env:
+        pkl_version: ${{ matrix.version }}
+      uses: recih/template-render-action@v1.0.2
+      with:
+        template-file: swift/setup.template.sh
+        output-file: swift/Dockerfile
+        engine: mustache
+    - name: Make setup.sh executable
+      run: chmod +x swift/setup.sh
     - name: Render endpoint.sh
       env:
         call: LD_LIBRARY_PATH=/usr/share/swift/usr/lib/swift/linux PATH=$PATH:/usr/share/swift/usr/bin/ /pkl-gen-swift
@@ -441,6 +451,16 @@ jobs:
         template-file: go/template.Dockerfile
         output-file: go/Dockerfile
         engine: mustache
+    - name: Render setup.template.sh
+      env:
+        pkl_version: ${{ matrix.version }}
+      uses: recih/template-render-action@v1.0.2
+      with:
+        template-file: go/setup.template.sh
+        output-file: go/Dockerfile
+        engine: mustache
+    - name: Make setup.sh executable
+      run: chmod +x go/setup.sh
     - name: Lowercase repository name
       env:
         REPOSITORY: ${{ github.repository }}
