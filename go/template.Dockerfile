@@ -1,7 +1,9 @@
 FROM ubuntu:22.04
 
 RUN apt-get update
+RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -yqq software-properties-common
 RUN add-apt-repository -y ppa:longsleep/golang-backports
+RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -yqq curl golang-go
 
 RUN curl -L -o /pkl https://github.com/apple/pkl/releases/download/{{{ env.pkl_version }}}/pkl-linux-amd64 && \
