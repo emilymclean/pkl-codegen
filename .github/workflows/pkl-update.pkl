@@ -102,8 +102,8 @@ jobs = new Mapping {
                 name = "Create Pull Request"
                 uses = "peter-evans/create-pull-request@v6"
                 with = new Mapping {
-                    ["branch"] = "update-pkl/feature/${{ needs.version.outputs.latest-version }}-pkl-lang"
-                    ["title"] = "Update Pkl from ${{ needs.version.outputs.current-version }} to ${{ needs.version.outputs.latest-version }}"
+                    ["branch"] = "update-pkl/feature/${{ needs.\(versionJobName).outputs.latest-version }}-pkl-lang"
+                    ["title"] = "Update Pkl from ${{ needs.\(versionJobName).outputs.current-version }} to ${{ needs.\(versionJobName).outputs.latest-version }}"
                     ["assignees"] = "emilymclean"
                     ["reviewers"] = "emilymclean"
                 }

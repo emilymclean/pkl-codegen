@@ -65,8 +65,8 @@ jobs:
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v6
       with:
-        branch: update-pkl/feature/${{ needs.version.outputs.latest-version }}-pkl-lang
-        title: Update Pkl from ${{ needs.version.outputs.current-version }} to ${{ needs.version.outputs.latest-version }}
+        branch: update-pkl/feature/${{ needs.get-current-pkl-version.outputs.latest-version }}-pkl-lang
+        title: Update Pkl from ${{ needs.get-current-pkl-version.outputs.current-version }} to ${{ needs.get-current-pkl-version.outputs.latest-version }}
         assignees: emilymclean
         reviewers: emilymclean
   keep-alive:
