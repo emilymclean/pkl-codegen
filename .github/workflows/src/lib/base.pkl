@@ -59,7 +59,7 @@ function renderForPlatform(platform: String, version: String): Listing<Step> = n
         new CommandStep {
             name = "Read swift-tool-version"
             run = """
-            echo "swift_tool_version=$(cat swift/swift-tool-version)"
+            echo "swift_tool_version=$(cat swift/swift-tool-version)" >> $GITHUB_ENV
             """
         }
     else 
