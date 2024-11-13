@@ -1,13 +1,13 @@
 open module base
 extends "package://github.com/emilymclean/pkl-github-actions/releases/download/v0.1.0-alpha.96/pkl-github-actions@0.1.0-alpha.96#/actions.pkl"
+import "../actions/checkout.pkl" as actions_checkout
+import "../actions/template-render-action.pkl" as actions_template_render_action
 
 hidden const PLATFORM_JAVA = "java"
 hidden const PLATFORM_KOTLIN = "kotlin"
 hidden const PLATFORM_SWIFT = "swift"
 hidden const PLATFORM_PKLDOC = "doc"
 hidden const PLATFORM_GO = "go"
-
-hidden const RENDER_TEMPLATE_ACTION = "emilymclean/template-render-action@v1.0.2"
 
 typealias Platform = "java"|"kotlin"|"swift"|"doc"|"go"
 
@@ -28,12 +28,11 @@ hidden platformCalls = new Mapping<Platform, String> {
     [PLATFORM_PKLDOC] = "java -cp /pklgen.jar org.pkl.doc.Main"
 }
 
-hidden checkout = new ActionStep {
-    uses = "actions/checkout@v4"
-    with = new Mapping {
-        ["fetch-depth"] = 0
+hidden checkout = new actions_checkout.Step {
+    inputs = new actions_checkout.ActionInput {
+        fetchDepth = 0
     }
-}
+}.github_actions
 
 hidden currentVersion: Step = new CommandStep {
     name = "Get current latest supported pkl version"
@@ -91,23 +90,22 @@ function renderForPlatform(platform: Platform, version: String): Listing<Step> =
         }
     else null
     if (List(PLATFORM_GO).contains(platform))
-        new ActionStep {
+        new actions_template_render_action.Step {
             name = "Render template.Dockerfile"
-            uses = RENDER_TEMPLATE_ACTION
             env = new Mapping {
                 ["pkl_version"] = version
             }
-            with = new Mapping {
-                ["template-file"] = "\(platform)/template.Dockerfile"
-                ["output-file"] = "\(platform)/Dockerfile"
-                ["engine"] = "mustache"
+            inputs = new actions_template_render_action.ActionInput {
+                templateFile = "\(platform)/template.Dockerfile"
+                outputFile = "\(platform)/Dockerfile"
+                engine = "mustache"
             }
-        }
+        }.github_actions
     else null
     if (List(PLATFORM_GO, PLATFORM_SWIFT).contains(platform))
         new ActionStep {
             name = "Render setup.template.sh"
-            uses = RENDER_TEMPLATE_ACTION
+            uses = actions_template_render_action.ACTION_CALL
             env = new Mapping {
                 ["pkl_version"] = version
             }
@@ -127,7 +125,7 @@ function renderForPlatform(platform: Platform, version: String): Listing<Step> =
     if (!List(PLATFORM_GO, PLATFORM_SWIFT).contains(platform))
         new ActionStep {
             name = "Render build.template.gradle"
-            uses = RENDER_TEMPLATE_ACTION
+            uses = actions_template_render_action.ACTION_CALL
             env = new Mapping {
                 ["pkl_version"] = version
             }
@@ -141,7 +139,7 @@ function renderForPlatform(platform: Platform, version: String): Listing<Step> =
     if (platform != PLATFORM_GO)
         new ActionStep {
             name = "Render endpoint.sh"
-            uses = RENDER_TEMPLATE_ACTION
+            uses = actions_template_render_action.ACTION_CALL
             env = new Mapping {
                 ["call"] = platformCalls[platform]
             }

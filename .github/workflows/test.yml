@@ -275,8 +275,8 @@ jobs:
       uses: emilymclean/template-render-action@v1.0.2
       with:
         template-file: go/template.Dockerfile
-        output-file: go/Dockerfile
         engine: mustache
+        output-file: go/Dockerfile
     - name: Render setup.template.sh
       env:
         pkl_version: ${{ env.PKL_VERSION }}

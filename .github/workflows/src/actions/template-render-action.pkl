@@ -1,0 +1,99 @@
+open module emilymclean.template_render_action
+
+import "package://github.com/emilymclean/pkl-github-actions/releases/download/v0.1.0-alpha.96/pkl-github-actions@0.1.0-alpha.96#/actions.pkl" as pklaction
+
+hidden const ACTION_CALL = "emilymclean/template-render-action@v1.0.2"
+hidden const OUTPUT_CONTENT = "content"
+
+/// Template Render Action
+///
+/// A github action to render ejs/mustache template files using github context.
+class ActionInput {
+
+    /// Input template file path. You must specify either a template file or a template string.
+    templateFile: Any? = null
+
+    /// Input template string. You must specify either a template file or a template string.
+    template: Any? = null
+
+    /// glob mode. You can render all files matching the glob pattern./// If true, the `template-file` will be considered as a glob pattern. /// `template`/`output-file` will be ignored./// `content` field in action output will not be set./// The output file name will be the same as the input file name, without the file extension./// eg. 'data.json.template' will be rendered to 'data.json'
+    /// Default value if null is "false"
+    glob: Any? = null
+
+    /// Input variables. A dictionary of variables to be used in the template. Or specify a .yml/.yaml/.json file path.
+    vars: Any? = null
+
+    /// Template engine. Default is ejs. Currently supported: ejs, mustache.
+    /// Default value if null is "ejs"
+    engine: Any? = null
+
+    /// extra render options for the template engine.
+    /// Default value if null is "{}"
+    options: Any? = null
+
+    /// Output file path. If specified, the rendered template will be written to this file. Caution: If the file already exists, it will be overwritten.
+    outputFile: Any? = null
+
+}
+
+/// A "class as function", use this to construct a yaml or pkl-github-actions output.
+/// To use, run `new Step { ... }.yaml`
+class Step {
+    id: String? = null
+    name: String? = null
+    `if`: String? = null
+    env: Mapping<String, Any>? = null
+    inputs: ActionInput
+
+    fixed yaml = new {
+        ["id"] = id
+        ["name"] = name
+        ["uses"] = ACTION_CALL
+        ["if"] = `if`
+        ["env"] = env
+        ["with"] = new {
+            ["template-file"] = inputs.templateFile
+            ["template"] = inputs.template
+            ["glob"] = inputs.glob
+            ["vars"] = inputs.vars
+            ["engine"] = inputs.engine
+            ["options"] = inputs.options
+            ["output-file"] = inputs.outputFile
+        }
+    }
+    fixed github_actions = create_github_action(this)
+
+}
+
+/// A convenience function to get a yaml step. If you need parameters besides id, name, and inputs,
+/// use the "class-as-function"
+const function Step(_id: String, _name: String, _inputs: ActionInput) =
+    new Step {
+        id = _id
+        name = _name
+        inputs = _inputs
+    }.yaml
+
+/// Generates the syntax to access the "content" output given the step ID
+///
+/// Output content. The rendered template.
+const function outputs_content(id: String) =
+    "steps.\(id).outputs.\(OUTPUT_CONTENT)"
+
+
+local const function create_github_action(step: Step) = new pklaction.ActionStep {
+  id = step.id
+  name = step.name
+  `if` = step.`if`
+  env = step.env
+  uses = ACTION_CALL
+  with = new Mapping {
+        ["template-file"] = step.inputs.templateFile
+        ["template"] = step.inputs.template
+        ["glob"] = step.inputs.glob
+        ["vars"] = step.inputs.vars
+        ["engine"] = step.inputs.engine
+        ["options"] = step.inputs.options
+        ["output-file"] = step.inputs.outputFile
+  }
+}
