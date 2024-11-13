@@ -8,7 +8,7 @@ jobs:
   test-java:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Get current latest supported pkl version
@@ -18,7 +18,7 @@ jobs:
     - name: Render build.template.gradle
       env:
         pkl_version: ${{ env.PKL_VERSION }}
-      uses: recih/template-render-action@v1.0.2
+      uses: emilymclean/render-template-action@v1.0.0
       with:
         template-file: java/project/build.template.gradle
         output-file: java/project/build.gradle
@@ -26,7 +26,7 @@ jobs:
     - name: Render endpoint.sh
       env:
         call: java -cp /pklgen.jar org.pkl.codegen.java.Main
-      uses: recih/template-render-action@v1.0.2
+      uses: emilymclean/render-template-action@v1.0.0
       with:
         template-file: templates/entrypoint.template.sh
         output-file: java/entrypoint.sh
@@ -34,11 +34,11 @@ jobs:
     - name: Make endpoint.sh executable
       run: chmod +x java/entrypoint.sh
     - name: Setup QEMU
-      uses: docker/setup-qemu-action@v2
+      uses: docker/setup-qemu-action@v3
     - name: Setup Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      uses: docker/setup-buildx-action@v3
     - name: Log in to the Container registry
-      uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+      uses: docker/login-action@v3
       with:
         registry: https://ghcr.io
         username: ${{ github.actor }}
@@ -70,7 +70,7 @@ jobs:
   test-kotlin:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Get current latest supported pkl version
@@ -80,7 +80,7 @@ jobs:
     - name: Render build.template.gradle
       env:
         pkl_version: ${{ env.PKL_VERSION }}
-      uses: recih/template-render-action@v1.0.2
+      uses: emilymclean/render-template-action@v1.0.0
       with:
         template-file: kotlin/project/build.template.gradle
         output-file: kotlin/project/build.gradle
@@ -88,7 +88,7 @@ jobs:
     - name: Render endpoint.sh
       env:
         call: java -cp /pklgen.jar org.pkl.codegen.kotlin.Main
-      uses: recih/template-render-action@v1.0.2
+      uses: emilymclean/render-template-action@v1.0.0
       with:
         template-file: templates/entrypoint.template.sh
         output-file: kotlin/entrypoint.sh
@@ -96,11 +96,11 @@ jobs:
     - name: Make endpoint.sh executable
       run: chmod +x kotlin/entrypoint.sh
     - name: Setup QEMU
-      uses: docker/setup-qemu-action@v2
+      uses: docker/setup-qemu-action@v3
     - name: Setup Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      uses: docker/setup-buildx-action@v3
     - name: Log in to the Container registry
-      uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+      uses: docker/login-action@v3
       with:
         registry: https://ghcr.io
         username: ${{ github.actor }}
@@ -132,7 +132,7 @@ jobs:
   test-doc:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Get current latest supported pkl version
@@ -142,7 +142,7 @@ jobs:
     - name: Render build.template.gradle
       env:
         pkl_version: ${{ env.PKL_VERSION }}
-      uses: recih/template-render-action@v1.0.2
+      uses: emilymclean/render-template-action@v1.0.0
       with:
         template-file: doc/project/build.template.gradle
         output-file: doc/project/build.gradle
@@ -150,7 +150,7 @@ jobs:
     - name: Render endpoint.sh
       env:
         call: java -cp /pklgen.jar org.pkl.doc.Main
-      uses: recih/template-render-action@v1.0.2
+      uses: emilymclean/render-template-action@v1.0.0
       with:
         template-file: templates/entrypoint.template.sh
         output-file: doc/entrypoint.sh
@@ -158,11 +158,11 @@ jobs:
     - name: Make endpoint.sh executable
       run: chmod +x doc/entrypoint.sh
     - name: Setup QEMU
-      uses: docker/setup-qemu-action@v2
+      uses: docker/setup-qemu-action@v3
     - name: Setup Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      uses: docker/setup-buildx-action@v3
     - name: Log in to the Container registry
-      uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+      uses: docker/login-action@v3
       with:
         registry: https://ghcr.io
         username: ${{ github.actor }}
@@ -194,7 +194,7 @@ jobs:
   test-swift:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Get current latest supported pkl version
@@ -206,7 +206,7 @@ jobs:
     - name: Render setup.template.sh
       env:
         pkl_version: ${{ env.PKL_VERSION }}
-      uses: recih/template-render-action@v1.0.2
+      uses: emilymclean/render-template-action@v1.0.0
       with:
         template-file: swift/setup.template.sh
         output-file: swift/setup.sh
@@ -216,7 +216,7 @@ jobs:
     - name: Render endpoint.sh
       env:
         call: LD_LIBRARY_PATH=/usr/share/swift/usr/lib/swift/linux PATH=$PATH:/usr/share/swift/usr/bin/ /pkl-gen-swift
-      uses: recih/template-render-action@v1.0.2
+      uses: emilymclean/render-template-action@v1.0.0
       with:
         template-file: templates/entrypoint.template.sh
         output-file: swift/entrypoint.sh
@@ -224,11 +224,11 @@ jobs:
     - name: Make endpoint.sh executable
       run: chmod +x swift/entrypoint.sh
     - name: Setup QEMU
-      uses: docker/setup-qemu-action@v2
+      uses: docker/setup-qemu-action@v3
     - name: Setup Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      uses: docker/setup-buildx-action@v3
     - name: Log in to the Container registry
-      uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+      uses: docker/login-action@v3
       with:
         registry: https://ghcr.io
         username: ${{ github.actor }}
@@ -260,7 +260,7 @@ jobs:
   test-go:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Get current latest supported pkl version
@@ -272,7 +272,7 @@ jobs:
     - name: Render template.Dockerfile
       env:
         pkl_version: ${{ env.PKL_VERSION }}
-      uses: recih/template-render-action@v1.0.2
+      uses: emilymclean/render-template-action@v1.0.0
       with:
         template-file: go/template.Dockerfile
         output-file: go/Dockerfile
@@ -280,7 +280,7 @@ jobs:
     - name: Render setup.template.sh
       env:
         pkl_version: ${{ env.PKL_VERSION }}
-      uses: recih/template-render-action@v1.0.2
+      uses: emilymclean/render-template-action@v1.0.0
       with:
         template-file: go/setup.template.sh
         output-file: go/setup.sh
@@ -288,11 +288,11 @@ jobs:
     - name: Make setup.sh executable
       run: chmod +x go/setup.sh
     - name: Setup QEMU
-      uses: docker/setup-qemu-action@v2
+      uses: docker/setup-qemu-action@v3
     - name: Setup Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      uses: docker/setup-buildx-action@v3
     - name: Log in to the Container registry
-      uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+      uses: docker/login-action@v3
       with:
         registry: https://ghcr.io
         username: ${{ github.actor }}
