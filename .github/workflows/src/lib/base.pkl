@@ -7,7 +7,7 @@ hidden const PLATFORM_SWIFT = "swift"
 hidden const PLATFORM_PKLDOC = "doc"
 hidden const PLATFORM_GO = "go"
 
-hidden const RENDER_TEMPLATE_ACTION = "emilymclean/template-render-action@v1.0.1"
+hidden const RENDER_TEMPLATE_ACTION = "emilymclean/template-render-action@v1.0.2"
 
 typealias Platform = "java"|"kotlin"|"swift"|"doc"|"go"
 
