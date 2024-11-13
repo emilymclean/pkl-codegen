@@ -103,18 +103,17 @@ function renderForPlatform(platform: Platform, version: String): Listing<Step> =
         }.github_actions
     else null
     if (List(PLATFORM_GO, PLATFORM_SWIFT).contains(platform))
-        new ActionStep {
+        new actions_template_render_action.Step {
             name = "Render setup.template.sh"
-            uses = actions_template_render_action.ACTION_CALL
             env = new Mapping {
                 ["pkl_version"] = version
             }
-            with = new Mapping {
-                ["template-file"] = "\(platform)/setup.template.sh"
-                ["output-file"] = "\(platform)/setup.sh"
-                ["engine"] = "mustache"
+            inputs = new actions_template_render_action.ActionInput {
+                templateFile = "\(platform)/setup.template.sh"
+                outputFile = "\(platform)/setup.sh"
+                engine = "mustache"
             }
-        }
+        }.github_actions
     else null
     if (List(PLATFORM_GO, PLATFORM_SWIFT).contains(platform))
         new CommandStep {
@@ -123,32 +122,30 @@ function renderForPlatform(platform: Platform, version: String): Listing<Step> =
         }
     else null
     if (!List(PLATFORM_GO, PLATFORM_SWIFT).contains(platform))
-        new ActionStep {
+        new actions_template_render_action.Step {
             name = "Render build.template.gradle"
-            uses = actions_template_render_action.ACTION_CALL
             env = new Mapping {
                 ["pkl_version"] = version
             }
-            with = new Mapping {
-                ["template-file"] = "\(platform)/project/build.template.gradle"
-                ["output-file"] = "\(platform)/project/build.gradle"
-                ["engine"] = "mustache"
+            inputs = new actions_template_render_action.ActionInput {
+                templateFile = "\(platform)/project/build.template.gradle"
+                outputFile = "\(platform)/project/build.gradle"
+                engine = "mustache"
             }
-        }
+        }.github_actions
     else null
     if (platform != PLATFORM_GO)
-        new ActionStep {
+        new actions_template_render_action.Step {
             name = "Render endpoint.sh"
-            uses = actions_template_render_action.ACTION_CALL
             env = new Mapping {
                 ["call"] = platformCalls[platform]
             }
-            with = new Mapping {
-                ["template-file"] = "templates/entrypoint.template.sh"
-                ["output-file"] = "\(platform)/entrypoint.sh"
-                ["engine"] = "mustache"
+            inputs = new actions_template_render_action.ActionInput {
+                templateFile = "templates/entrypoint.template.sh"
+                outputFile = "\(platform)/entrypoint.sh"
+                engine = "mustache"
             }
-        }
+        }.github_actions
     else null
     if (platform != PLATFORM_GO)
         new CommandStep {
