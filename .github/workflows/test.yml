@@ -18,7 +18,7 @@ jobs:
     - name: Render build.template.gradle
       env:
         pkl_version: ${{ env.PKL_VERSION }}
-      uses: emilymclean/template-render-action@v1.0.0
+      uses: emilymclean/template-render-action@v1.0.1
       with:
         template-file: java/project/build.template.gradle
         output-file: java/project/build.gradle
@@ -26,7 +26,7 @@ jobs:
     - name: Render endpoint.sh
       env:
         call: java -cp /pklgen.jar org.pkl.codegen.java.Main
-      uses: emilymclean/template-render-action@v1.0.0
+      uses: emilymclean/template-render-action@v1.0.1
       with:
         template-file: templates/entrypoint.template.sh
         output-file: java/entrypoint.sh
@@ -80,7 +80,7 @@ jobs:
     - name: Render build.template.gradle
       env:
         pkl_version: ${{ env.PKL_VERSION }}
-      uses: emilymclean/template-render-action@v1.0.0
+      uses: emilymclean/template-render-action@v1.0.1
       with:
         template-file: kotlin/project/build.template.gradle
         output-file: kotlin/project/build.gradle
@@ -88,7 +88,7 @@ jobs:
     - name: Render endpoint.sh
       env:
         call: java -cp /pklgen.jar org.pkl.codegen.kotlin.Main
-      uses: emilymclean/template-render-action@v1.0.0
+      uses: emilymclean/template-render-action@v1.0.1
       with:
         template-file: templates/entrypoint.template.sh
         output-file: kotlin/entrypoint.sh
@@ -142,7 +142,7 @@ jobs:
     - name: Render build.template.gradle
       env:
         pkl_version: ${{ env.PKL_VERSION }}
-      uses: emilymclean/template-render-action@v1.0.0
+      uses: emilymclean/template-render-action@v1.0.1
       with:
         template-file: doc/project/build.template.gradle
         output-file: doc/project/build.gradle
@@ -150,7 +150,7 @@ jobs:
     - name: Render endpoint.sh
       env:
         call: java -cp /pklgen.jar org.pkl.doc.Main
-      uses: emilymclean/template-render-action@v1.0.0
+      uses: emilymclean/template-render-action@v1.0.1
       with:
         template-file: templates/entrypoint.template.sh
         output-file: doc/entrypoint.sh
@@ -206,7 +206,7 @@ jobs:
     - name: Render setup.template.sh
       env:
         pkl_version: ${{ env.PKL_VERSION }}
-      uses: emilymclean/template-render-action@v1.0.0
+      uses: emilymclean/template-render-action@v1.0.1
       with:
         template-file: swift/setup.template.sh
         output-file: swift/setup.sh
@@ -216,7 +216,7 @@ jobs:
     - name: Render endpoint.sh
       env:
         call: LD_LIBRARY_PATH=/usr/share/swift/usr/lib/swift/linux PATH=$PATH:/usr/share/swift/usr/bin/ /pkl-gen-swift
-      uses: emilymclean/template-render-action@v1.0.0
+      uses: emilymclean/template-render-action@v1.0.1
       with:
         template-file: templates/entrypoint.template.sh
         output-file: swift/entrypoint.sh
@@ -272,7 +272,7 @@ jobs:
     - name: Render template.Dockerfile
       env:
         pkl_version: ${{ env.PKL_VERSION }}
-      uses: emilymclean/template-render-action@v1.0.0
+      uses: emilymclean/template-render-action@v1.0.1
       with:
         template-file: go/template.Dockerfile
         output-file: go/Dockerfile
@@ -280,7 +280,7 @@ jobs:
     - name: Render setup.template.sh
       env:
         pkl_version: ${{ env.PKL_VERSION }}
-      uses: emilymclean/template-render-action@v1.0.0
+      uses: emilymclean/template-render-action@v1.0.1
       with:
         template-file: go/setup.template.sh
         output-file: go/setup.sh
