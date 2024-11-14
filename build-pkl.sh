@@ -12,6 +12,10 @@ create_action_pkl() {
 
 create_action_pkl actions/checkout@v4
 create_action_pkl emilymclean/template-render-action@v1.0.2
+create_action_pkl docker/setup-qemu-action@v3
+create_action_pkl docker/setup-buildx-action@v3
+create_action_pkl docker/login-action@v3
+create_action_pkl docker/build-push-action@v4
 
 pkl eval .github/workflows/src/build.pkl -f yaml -o .github/workflows/build.yml
 pkl eval .github/workflows/src/test.pkl -f yaml -o .github/workflows/test.yml

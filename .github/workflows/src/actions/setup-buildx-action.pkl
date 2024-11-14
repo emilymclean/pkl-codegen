@@ -1,0 +1,198 @@
+open module docker.setup_buildx_action
+
+import "package://github.com/emilymclean/pkl-github-actions/releases/download/v0.1.0-alpha.96/pkl-github-actions@0.1.0-alpha.96#/actions.pkl" as pklaction
+
+hidden const ACTION_CALL = "docker/setup-buildx-action@v3"
+hidden const OUTPUT_NAME = "name"
+hidden const OUTPUT_DRIVER = "driver"
+hidden const OUTPUT_PLATFORMS = "platforms"
+hidden const OUTPUT_NODES = "nodes"
+hidden const OUTPUT_ENDPOINT = "endpoint"
+hidden const OUTPUT_STATUS = "status"
+hidden const OUTPUT_FLAGS = "flags"
+
+/// Docker Setup Buildx
+///
+/// Set up Docker Buildx
+class ActionInput {
+
+    /// Buildx version. (eg. v0.3.0)
+    version: Any? = null
+
+    /// Sets the builder driver to be used
+    /// Default value if null is "docker-container"
+    driver: Any? = null
+
+    /// List of additional driver-specific options. (eg. image=moby/buildkit:master)
+    driverOpts: Any? = null
+
+    /// BuildKit daemon flags
+    buildkitdFlags: Any? = null
+
+    /// BuildKit daemon config file
+    buildkitdConfig: Any? = null
+
+    /// Inline BuildKit daemon config
+    buildkitdConfigInline: Any? = null
+
+    /// Sets up docker build command as an alias to docker buildx build
+    /// Default value if null is "false"
+    install: Any? = null
+
+    /// Switch to this builder instance
+    /// Default value if null is "true"
+    use: Any? = null
+
+    /// Optional address for docker socket or context from `docker context ls`
+    endpoint: Any? = null
+
+    /// Fixed platforms for current node. If not empty, values take priority over the detected ones
+    platforms: Any? = null
+
+    /// Append additional nodes to the builder
+    append: Any? = null
+
+    /// Cache buildx binary to GitHub Actions cache backend
+    /// Default value if null is "true"
+    cacheBinary: Any? = null
+
+    /// Cleanup temp files and remove builder at the end of a job
+    /// Default value if null is "true"
+    cleanup: Any? = null
+
+    /// BuildKit daemon config file
+    config: Any? = null
+
+    /// Inline BuildKit daemon config
+    configInline: Any? = null
+
+}
+
+/// A "class as function", use this to construct a yaml or pkl-github-actions output.
+/// To use, run `new Step { ... }.yaml`
+class Step {
+    id: String? = null
+    name: String? = null
+    `if`: String? = null
+    env: Mapping<String, Any>? = null
+    inputs: ActionInput? = null
+
+    fixed yaml = new {
+        ["id"] = id
+        ["name"] = name
+        ["uses"] = ACTION_CALL
+        ["if"] = `if`
+        ["env"] = env
+        ["with"] = if(inputs != null) new {
+            ["version"] = inputs.version
+            ["driver"] = inputs.driver
+            ["driver-opts"] = inputs.driverOpts
+            ["buildkitd-flags"] = inputs.buildkitdFlags
+            ["buildkitd-config"] = inputs.buildkitdConfig
+            ["buildkitd-config-inline"] = inputs.buildkitdConfigInline
+            ["install"] = inputs.install
+            ["use"] = inputs.use
+            ["endpoint"] = inputs.endpoint
+            ["platforms"] = inputs.platforms
+            ["append"] = inputs.append
+            ["cache-binary"] = inputs.cacheBinary
+            ["cleanup"] = inputs.cleanup
+            ["config"] = inputs.config
+            ["config-inline"] = inputs.configInline
+        } else null
+    }
+    fixed github_actions = create_github_action(this)
+
+}
+
+/// A convenience function to get a yaml step. If you need parameters besides id, name, and inputs,
+/// use the "class-as-function"
+const function Step(_id: String?, _name: String?, _inputs: ActionInput?) =
+    Yaml(_id, _name, _inputs)
+
+/// A convenience function to get a yaml step. If you need parameters besides id, name, and inputs,
+/// use the "class-as-function"
+const function Yaml(_id: String?, _name: String?, _inputs: ActionInput?) =
+    new Step {
+        id = _id
+        name = _name
+        inputs = _inputs
+    }.yaml
+
+/// A convenience function to get a github_actions step. If you need parameters besides id, name, and inputs,
+/// use the "class-as-function"
+const function GithubAction(_id: String?, _name: String?, _inputs: ActionInput?) =
+    new Step {
+        id = _id
+        name = _name
+        inputs = _inputs
+    }.github_actions
+
+
+/// Generates the syntax to access the "name" output given the step ID
+///
+/// Builder name
+const function outputs_name(id: String) =
+    "steps.\(id).outputs.\(OUTPUT_NAME)"
+
+/// Generates the syntax to access the "driver" output given the step ID
+///
+/// Builder driver
+const function outputs_driver(id: String) =
+    "steps.\(id).outputs.\(OUTPUT_DRIVER)"
+
+/// Generates the syntax to access the "platforms" output given the step ID
+///
+/// Builder node platforms (preferred or available)
+const function outputs_platforms(id: String) =
+    "steps.\(id).outputs.\(OUTPUT_PLATFORMS)"
+
+/// Generates the syntax to access the "nodes" output given the step ID
+///
+/// Builder nodes metadata
+const function outputs_nodes(id: String) =
+    "steps.\(id).outputs.\(OUTPUT_NODES)"
+
+/// Generates the syntax to access the "endpoint" output given the step ID
+///
+/// Builder node endpoint (deprecated, use nodes output instead)
+const function outputs_endpoint(id: String) =
+    "steps.\(id).outputs.\(OUTPUT_ENDPOINT)"
+
+/// Generates the syntax to access the "status" output given the step ID
+///
+/// Builder node status (deprecated, use nodes output instead)
+const function outputs_status(id: String) =
+    "steps.\(id).outputs.\(OUTPUT_STATUS)"
+
+/// Generates the syntax to access the "flags" output given the step ID
+///
+/// Builder node flags (deprecated, use nodes output instead)
+const function outputs_flags(id: String) =
+    "steps.\(id).outputs.\(OUTPUT_FLAGS)"
+
+
+local const function create_github_action(step: Step) = new pklaction.ActionStep {
+    id = step.id
+    name = step.name
+    `if` = step.`if`
+    env = step.env
+    uses = ACTION_CALL
+    with = if (step.inputs != null) new Mapping {
+        ["version"] = step.inputs.version
+        ["driver"] = step.inputs.driver
+        ["driver-opts"] = step.inputs.driverOpts
+        ["buildkitd-flags"] = step.inputs.buildkitdFlags
+        ["buildkitd-config"] = step.inputs.buildkitdConfig
+        ["buildkitd-config-inline"] = step.inputs.buildkitdConfigInline
+        ["install"] = step.inputs.install
+        ["use"] = step.inputs.use
+        ["endpoint"] = step.inputs.endpoint
+        ["platforms"] = step.inputs.platforms
+        ["append"] = step.inputs.append
+        ["cache-binary"] = step.inputs.cacheBinary
+        ["cleanup"] = step.inputs.cleanup
+        ["config"] = step.inputs.config
+        ["config-inline"] = step.inputs.configInline
+    } else null
+}

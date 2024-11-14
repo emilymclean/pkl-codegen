@@ -47,8 +47,8 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         context: java
-        platforms: linux/amd64
         load: true
+        platforms: linux/amd64
         tags: test/java:latest
     - run: |-
         # Test using new style explicitly listing -o
@@ -109,8 +109,8 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         context: kotlin
-        platforms: linux/amd64
         load: true
+        platforms: linux/amd64
         tags: test/kotlin:latest
     - run: |-
         # Test using new style explicitly listing -o
@@ -171,8 +171,8 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         context: doc
-        platforms: linux/amd64
         load: true
+        platforms: linux/amd64
         tags: test/doc:latest
     - run: |-
         # Test using new style explicitly listing -o
@@ -237,8 +237,8 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         context: swift
-        platforms: linux/amd64
         load: true
+        platforms: linux/amd64
         tags: test/swift:latest
     - run: |-
         # Test using new style explicitly listing -o
@@ -301,8 +301,8 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         context: go
-        platforms: linux/amd64
         load: true
+        platforms: linux/amd64
         tags: test/go:latest
     - run: |-
         docker run --rm -v "./test-data/:/data" test/go:latest /data/example.pkl --mapping example=github.com/emilymclean/pkl-codegen/example --output-path /data/newstyle-out

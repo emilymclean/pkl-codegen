@@ -43,7 +43,7 @@ class Step {
     name: String? = null
     `if`: String? = null
     env: Mapping<String, Any>? = null
-    inputs: ActionInput
+    inputs: ActionInput? = null
 
     fixed yaml = new {
         ["id"] = id
@@ -51,7 +51,7 @@ class Step {
         ["uses"] = ACTION_CALL
         ["if"] = `if`
         ["env"] = env
-        ["with"] = new {
+        ["with"] = if(inputs != null) new {
             ["template-file"] = inputs.templateFile
             ["template"] = inputs.template
             ["glob"] = inputs.glob
@@ -59,7 +59,7 @@ class Step {
             ["engine"] = inputs.engine
             ["options"] = inputs.options
             ["output-file"] = inputs.outputFile
-        }
+        } else null
     }
     fixed github_actions = create_github_action(this)
 
@@ -67,12 +67,27 @@ class Step {
 
 /// A convenience function to get a yaml step. If you need parameters besides id, name, and inputs,
 /// use the "class-as-function"
-const function Step(_id: String, _name: String, _inputs: ActionInput) =
+const function Step(_id: String?, _name: String?, _inputs: ActionInput?) =
+    Yaml(_id, _name, _inputs)
+
+/// A convenience function to get a yaml step. If you need parameters besides id, name, and inputs,
+/// use the "class-as-function"
+const function Yaml(_id: String?, _name: String?, _inputs: ActionInput?) =
     new Step {
         id = _id
         name = _name
         inputs = _inputs
     }.yaml
+
+/// A convenience function to get a github_actions step. If you need parameters besides id, name, and inputs,
+/// use the "class-as-function"
+const function GithubAction(_id: String?, _name: String?, _inputs: ActionInput?) =
+    new Step {
+        id = _id
+        name = _name
+        inputs = _inputs
+    }.github_actions
+
 
 /// Generates the syntax to access the "content" output given the step ID
 ///
@@ -82,12 +97,12 @@ const function outputs_content(id: String) =
 
 
 local const function create_github_action(step: Step) = new pklaction.ActionStep {
-  id = step.id
-  name = step.name
-  `if` = step.`if`
-  env = step.env
-  uses = ACTION_CALL
-  with = new Mapping {
+    id = step.id
+    name = step.name
+    `if` = step.`if`
+    env = step.env
+    uses = ACTION_CALL
+    with = if (step.inputs != null) new Mapping {
         ["template-file"] = step.inputs.templateFile
         ["template"] = step.inputs.template
         ["glob"] = step.inputs.glob
@@ -95,5 +110,5 @@ local const function create_github_action(step: Step) = new pklaction.ActionStep
         ["engine"] = step.inputs.engine
         ["options"] = step.inputs.options
         ["output-file"] = step.inputs.outputFile
-  }
+    } else null
 }

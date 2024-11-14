@@ -1,0 +1,245 @@
+open module docker.build_push_action
+
+import "package://github.com/emilymclean/pkl-github-actions/releases/download/v0.1.0-alpha.96/pkl-github-actions@0.1.0-alpha.96#/actions.pkl" as pklaction
+
+hidden const ACTION_CALL = "docker/build-push-action@v4"
+hidden const OUTPUT_IMAGEID = "imageid"
+hidden const OUTPUT_DIGEST = "digest"
+hidden const OUTPUT_METADATA = "metadata"
+
+/// Build and push Docker images
+///
+/// Build and push Docker images with Buildx
+class ActionInput {
+
+    /// List of a customs host-to-IP mapping (e.g., docker:10.180.0.1)
+    addHosts: Any? = null
+
+    /// List of extra privileged entitlement (e.g., network.host,security.insecure)
+    allow: Any? = null
+
+    /// List of attestation parameters (e.g., type=sbom,generator=image)
+    attests: Any? = null
+
+    /// List of build-time variables
+    buildArgs: Any? = null
+
+    /// List of additional build contexts (e.g., name=path)
+    buildContexts: Any? = null
+
+    /// Builder instance
+    builder: Any? = null
+
+    /// List of external cache sources for buildx (e.g., user/app:cache, type=local,src=path/to/dir)
+    cacheFrom: Any? = null
+
+    /// List of cache export destinations for buildx (e.g., user/app:cache, type=local,dest=path/to/dir)
+    cacheTo: Any? = null
+
+    /// Optional parent cgroup for the container used in the build
+    cgroupParent: Any? = null
+
+    /// Build's context is the set of files located in the specified PATH or URL
+    context: Any? = null
+
+    /// Path to the Dockerfile
+    file: Any? = null
+
+    /// List of metadata for an image
+    labels: Any? = null
+
+    /// Load is a shorthand for --output=type=docker
+    /// Default value if null is "false"
+    load: Any? = null
+
+    /// Set the networking mode for the RUN instructions during build
+    network: Any? = null
+
+    /// Do not use cache when building the image
+    /// Default value if null is "false"
+    noCache: Any? = null
+
+    /// Do not cache specified stages
+    noCacheFilters: Any? = null
+
+    /// List of output destinations (format: type=local,dest=path)
+    outputs: Any? = null
+
+    /// List of target platforms for build
+    platforms: Any? = null
+
+    /// Generate provenance attestation for the build (shorthand for --attest=type=provenance)
+    provenance: Any? = null
+
+    /// Always attempt to pull all referenced images
+    /// Default value if null is "false"
+    pull: Any? = null
+
+    /// Push is a shorthand for --output=type=registry
+    /// Default value if null is "false"
+    push: Any? = null
+
+    /// Generate SBOM attestation for the build (shorthand for --attest=type=sbom)
+    sbom: Any? = null
+
+    /// List of secrets to expose to the build (e.g., key=string, GIT_AUTH_TOKEN=mytoken)
+    secrets: Any? = null
+
+    /// List of secret files to expose to the build (e.g., key=filename, MY_SECRET=./secret.txt)
+    secretFiles: Any? = null
+
+    /// Size of /dev/shm (e.g., 2g)
+    shmSize: Any? = null
+
+    /// List of SSH agent socket or keys to expose to the build
+    ssh: Any? = null
+
+    /// List of tags
+    tags: Any? = null
+
+    /// Sets the target stage to build
+    target: Any? = null
+
+    /// Ulimit options (e.g., nofile=1024:1024)
+    ulimit: Any? = null
+
+    /// GitHub Token used to authenticate against a repository for Git context
+    /// Default value if null is "${{ github.token }}"
+    githubToken: Any? = null
+
+}
+
+/// A "class as function", use this to construct a yaml or pkl-github-actions output.
+/// To use, run `new Step { ... }.yaml`
+class Step {
+    id: String? = null
+    name: String? = null
+    `if`: String? = null
+    env: Mapping<String, Any>? = null
+    inputs: ActionInput? = null
+
+    fixed yaml = new {
+        ["id"] = id
+        ["name"] = name
+        ["uses"] = ACTION_CALL
+        ["if"] = `if`
+        ["env"] = env
+        ["with"] = if(inputs != null) new {
+            ["add-hosts"] = inputs.addHosts
+            ["allow"] = inputs.allow
+            ["attests"] = inputs.attests
+            ["build-args"] = inputs.buildArgs
+            ["build-contexts"] = inputs.buildContexts
+            ["builder"] = inputs.builder
+            ["cache-from"] = inputs.cacheFrom
+            ["cache-to"] = inputs.cacheTo
+            ["cgroup-parent"] = inputs.cgroupParent
+            ["context"] = inputs.context
+            ["file"] = inputs.file
+            ["labels"] = inputs.labels
+            ["load"] = inputs.load
+            ["network"] = inputs.network
+            ["no-cache"] = inputs.noCache
+            ["no-cache-filters"] = inputs.noCacheFilters
+            ["outputs"] = inputs.outputs
+            ["platforms"] = inputs.platforms
+            ["provenance"] = inputs.provenance
+            ["pull"] = inputs.pull
+            ["push"] = inputs.push
+            ["sbom"] = inputs.sbom
+            ["secrets"] = inputs.secrets
+            ["secret-files"] = inputs.secretFiles
+            ["shm-size"] = inputs.shmSize
+            ["ssh"] = inputs.ssh
+            ["tags"] = inputs.tags
+            ["target"] = inputs.target
+            ["ulimit"] = inputs.ulimit
+            ["github-token"] = inputs.githubToken
+        } else null
+    }
+    fixed github_actions = create_github_action(this)
+
+}
+
+/// A convenience function to get a yaml step. If you need parameters besides id, name, and inputs,
+/// use the "class-as-function"
+const function Step(_id: String?, _name: String?, _inputs: ActionInput?) =
+    Yaml(_id, _name, _inputs)
+
+/// A convenience function to get a yaml step. If you need parameters besides id, name, and inputs,
+/// use the "class-as-function"
+const function Yaml(_id: String?, _name: String?, _inputs: ActionInput?) =
+    new Step {
+        id = _id
+        name = _name
+        inputs = _inputs
+    }.yaml
+
+/// A convenience function to get a github_actions step. If you need parameters besides id, name, and inputs,
+/// use the "class-as-function"
+const function GithubAction(_id: String?, _name: String?, _inputs: ActionInput?) =
+    new Step {
+        id = _id
+        name = _name
+        inputs = _inputs
+    }.github_actions
+
+
+/// Generates the syntax to access the "imageid" output given the step ID
+///
+/// Image ID
+const function outputs_imageid(id: String) =
+    "steps.\(id).outputs.\(OUTPUT_IMAGEID)"
+
+/// Generates the syntax to access the "digest" output given the step ID
+///
+/// Image digest
+const function outputs_digest(id: String) =
+    "steps.\(id).outputs.\(OUTPUT_DIGEST)"
+
+/// Generates the syntax to access the "metadata" output given the step ID
+///
+/// Build result metadata
+const function outputs_metadata(id: String) =
+    "steps.\(id).outputs.\(OUTPUT_METADATA)"
+
+
+local const function create_github_action(step: Step) = new pklaction.ActionStep {
+    id = step.id
+    name = step.name
+    `if` = step.`if`
+    env = step.env
+    uses = ACTION_CALL
+    with = if (step.inputs != null) new Mapping {
+        ["add-hosts"] = step.inputs.addHosts
+        ["allow"] = step.inputs.allow
+        ["attests"] = step.inputs.attests
+        ["build-args"] = step.inputs.buildArgs
+        ["build-contexts"] = step.inputs.buildContexts
+        ["builder"] = step.inputs.builder
+        ["cache-from"] = step.inputs.cacheFrom
+        ["cache-to"] = step.inputs.cacheTo
+        ["cgroup-parent"] = step.inputs.cgroupParent
+        ["context"] = step.inputs.context
+        ["file"] = step.inputs.file
+        ["labels"] = step.inputs.labels
+        ["load"] = step.inputs.load
+        ["network"] = step.inputs.network
+        ["no-cache"] = step.inputs.noCache
+        ["no-cache-filters"] = step.inputs.noCacheFilters
+        ["outputs"] = step.inputs.outputs
+        ["platforms"] = step.inputs.platforms
+        ["provenance"] = step.inputs.provenance
+        ["pull"] = step.inputs.pull
+        ["push"] = step.inputs.push
+        ["sbom"] = step.inputs.sbom
+        ["secrets"] = step.inputs.secrets
+        ["secret-files"] = step.inputs.secretFiles
+        ["shm-size"] = step.inputs.shmSize
+        ["ssh"] = step.inputs.ssh
+        ["tags"] = step.inputs.tags
+        ["target"] = step.inputs.target
+        ["ulimit"] = step.inputs.ulimit
+        ["github-token"] = step.inputs.githubToken
+    } else null
+}

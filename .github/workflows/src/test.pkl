@@ -1,5 +1,6 @@
 amends "package://github.com/emilymclean/pkl-github-actions/releases/download/v0.1.0-alpha.96/pkl-github-actions@0.1.0-alpha.96#/actions.pkl"
 import "lib/base.pkl"
+import "actions/build-push-action.pkl" as actions_build_push_action
 
 local function testString(platform: String, extraFiles: List<String>): String = """
 # Test using new style explicitly listing -o
@@ -23,11 +24,11 @@ local function testPlatform(platform: String): Job = new Job {
         ...base.renderForPlatform(platform, "${{ env.PKL_VERSION }}")
         ...base.dockerSetup()
         ...base.dockerBuild(
-            new Mapping {
-                ["context"] = platform
-                ["platforms"] = "linux/amd64"
-                ["load"] = true
-                ["tags"] = """
+            new actions_build_push_action.ActionInput {
+                context = platform
+                platforms = "linux/amd64"
+                load = true
+                tags = """
                 test/\(platform):latest
                 """
             },

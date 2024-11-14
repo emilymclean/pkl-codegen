@@ -1,5 +1,6 @@
 amends "package://github.com/emilymclean/pkl-github-actions/releases/download/v0.1.0-alpha.96/pkl-github-actions@0.1.0-alpha.96#/actions.pkl"
 import "lib/base.pkl"
+import "actions/build-push-action.pkl" as actions_build_push_action
 
 local childRepositories = new Listing {
     "pkl-java-action"
@@ -65,11 +66,11 @@ local function docker(dir: String): Listing =
         }
         ...base.dockerSetup()
         ...base.dockerBuild(
-            new Mapping {
-                ["context"] = dir
-                ["platforms"] = "linux/amd64,linux/arm64/v8"
-                ["push"] = true
-                ["tags"] = """
+            new actions_build_push_action.ActionInput {
+                context = dir
+                platforms = "linux/amd64,linux/arm64/v8"
+                push = true
+                tags = """
                 ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}
                 ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-nightly
                 ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
@@ -80,11 +81,11 @@ local function docker(dir: String): Listing =
             "github.ref == 'refs/heads/main'"
         )
         ...base.dockerBuild(
-            new Mapping {
-                ["context"] = dir
-                ["platforms"] = "linux/amd64,linux/arm64/v8"
-                ["push"] = true
-                ["tags"] = """
+            new actions_build_push_action.ActionInput {
+                context = dir
+                platforms = "linux/amd64,linux/arm64/v8"
+                push = true
+                tags = """
                 ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-nightly
                 ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
                 ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.version }}

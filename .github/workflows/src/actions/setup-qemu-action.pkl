@@ -1,0 +1,88 @@
+open module docker.setup_qemu_action
+
+import "package://github.com/emilymclean/pkl-github-actions/releases/download/v0.1.0-alpha.96/pkl-github-actions@0.1.0-alpha.96#/actions.pkl" as pklaction
+
+hidden const ACTION_CALL = "docker/setup-qemu-action@v3"
+hidden const OUTPUT_PLATFORMS = "platforms"
+
+/// Docker Setup QEMU
+///
+/// Install QEMU static binaries
+class ActionInput {
+
+    /// QEMU static binaries Docker image (e.g. tonistiigi/binfmt:latest)
+    /// Default value if null is "docker.io/tonistiigi/binfmt:latest"
+    image: Any? = null
+
+    /// Platforms to install (e.g. arm64,riscv64,arm)
+    /// Default value if null is "all"
+    platforms: Any? = null
+
+}
+
+/// A "class as function", use this to construct a yaml or pkl-github-actions output.
+/// To use, run `new Step { ... }.yaml`
+class Step {
+    id: String? = null
+    name: String? = null
+    `if`: String? = null
+    env: Mapping<String, Any>? = null
+    inputs: ActionInput? = null
+
+    fixed yaml = new {
+        ["id"] = id
+        ["name"] = name
+        ["uses"] = ACTION_CALL
+        ["if"] = `if`
+        ["env"] = env
+        ["with"] = if(inputs != null) new {
+            ["image"] = inputs.image
+            ["platforms"] = inputs.platforms
+        } else null
+    }
+    fixed github_actions = create_github_action(this)
+
+}
+
+/// A convenience function to get a yaml step. If you need parameters besides id, name, and inputs,
+/// use the "class-as-function"
+const function Step(_id: String?, _name: String?, _inputs: ActionInput?) =
+    Yaml(_id, _name, _inputs)
+
+/// A convenience function to get a yaml step. If you need parameters besides id, name, and inputs,
+/// use the "class-as-function"
+const function Yaml(_id: String?, _name: String?, _inputs: ActionInput?) =
+    new Step {
+        id = _id
+        name = _name
+        inputs = _inputs
+    }.yaml
+
+/// A convenience function to get a github_actions step. If you need parameters besides id, name, and inputs,
+/// use the "class-as-function"
+const function GithubAction(_id: String?, _name: String?, _inputs: ActionInput?) =
+    new Step {
+        id = _id
+        name = _name
+        inputs = _inputs
+    }.github_actions
+
+
+/// Generates the syntax to access the "platforms" output given the step ID
+///
+/// Available platforms (comma separated)
+const function outputs_platforms(id: String) =
+    "steps.\(id).outputs.\(OUTPUT_PLATFORMS)"
+
+
+local const function create_github_action(step: Step) = new pklaction.ActionStep {
+    id = step.id
+    name = step.name
+    `if` = step.`if`
+    env = step.env
+    uses = ACTION_CALL
+    with = if (step.inputs != null) new Mapping {
+        ["image"] = step.inputs.image
+        ["platforms"] = step.inputs.platforms
+    } else null
+}

@@ -2,6 +2,10 @@ open module base
 extends "package://github.com/emilymclean/pkl-github-actions/releases/download/v0.1.0-alpha.96/pkl-github-actions@0.1.0-alpha.96#/actions.pkl"
 import "../actions/checkout.pkl" as actions_checkout
 import "../actions/template-render-action.pkl" as actions_template_render_action
+import "../actions/login-action.pkl" as actions_login_action
+import "../actions/setup-buildx-action.pkl" as actions_setup_buildx_action
+import "../actions/setup-qemu-action.pkl" as actions_setup_qemu_action
+import "../actions/build-push-action.pkl" as actions_build_push_action
 
 hidden const PLATFORM_JAVA = "java"
 hidden const PLATFORM_KOTLIN = "kotlin"
@@ -42,33 +46,29 @@ hidden currentVersion: Step = new CommandStep {
     """
 }
 
-function dockerBuild(withM: Mapping, ifStatement: String?): Listing<Step> = new Listing {
-    new ActionStep {
+function dockerBuild(_inputs: actions_build_push_action.ActionInput, ifStatement: String?): Listing<Step> = new Listing {
+    new actions_build_push_action.Step {
         name = "Build and push Docker image"
-        uses = "docker/build-push-action@v4"
         `if` = ifStatement
-        with = withM
-    }
+        inputs = _inputs
+    }.github_actions
 }
 
 function dockerSetup(): Listing<Step> = new Listing {
-    new ActionStep {
+    new actions_setup_qemu_action.Step {
         name = "Setup QEMU"
-        uses = "docker/setup-qemu-action@v3"
-    }
-    new ActionStep {
+    }.github_actions
+    new actions_setup_buildx_action.Step {
         name = "Setup Docker Buildx"
-        uses = "docker/setup-buildx-action@v3"
-    }
-    new ActionStep {
+    }.github_actions
+    new actions_login_action.Step {
         name = "Log in to the Container registry"
-        uses = "docker/login-action@v3"
-        with = new Mapping {
-            ["registry"] = "https://ghcr.io"
-            ["username"] = "${{ github.actor }}"
-            ["password"] = "${{ secrets.GITHUB_TOKEN }}"
+        inputs = new actions_login_action.ActionInput {
+            registry = "https://ghcr.io"
+            username = "${{ github.actor }}"
+            password = "${{ secrets.GITHUB_TOKEN }}"
         }
-    }
+    }.github_actions
 }
 
 function renderForPlatform(platform: Platform, version: String): Listing<Step> = new Listing {
