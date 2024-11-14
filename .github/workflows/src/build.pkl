@@ -153,6 +153,13 @@ jobs = new Mapping {
         steps = new Listing {
             base.checkout
             new ActionStep {
+                name = "Create tag for release"
+                uses = "rickstaa/action-create-tag@v1"
+                with = new Mapping {
+                    ["tag"] = "v${{ needs.version.outputs.version }}"
+                }
+            }
+            new ActionStep {
                 id = "create_release"
                 uses = "softprops/action-gh-release@v2"
                 env = new Mapping {
