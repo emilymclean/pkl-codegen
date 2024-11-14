@@ -46,11 +46,10 @@ jobs:
     - id: create_release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      uses: actions/create-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: v${{ needs.version.outputs.version }}
-        release_name: Release ${{ needs.version.outputs.version }}
-        draft: false
+        name: Release ${{ needs.version.outputs.version }}
         prerelease: ${{ github.ref == 'refs/heads/develop' }}
   pkl-versions:
     runs-on: ubuntu-latest
