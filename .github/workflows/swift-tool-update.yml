@@ -44,7 +44,9 @@ jobs:
       with:
         fetch-depth: 0
     - name: Update swift/swift-tool-version file with latest release
-      run: echo "${{ needs.get-current-version.outputs.latest-version }}" > swift/swift-tool-version
+      run: |-
+        currentVersion="${{ needs.get-current-version.outputs.latest-version }}"
+        echo "${currentVersion##*v}" > swift/swift-tool-version
     - name: Setup node for gomplate
       uses: actions/setup-node@v4
     - name: Update README and entrypoints
