@@ -14,7 +14,7 @@ jobs:
       current-version: ${{ env.SWIFT_TOOL_VERSION }}
       latest-version: ${{ steps.cleaned-tool-release.outputs.release }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Get current swift tool version
@@ -45,7 +45,7 @@ jobs:
     if: needs.get-current-version.outputs.current-version != needs.get-current-version.outputs.latest-version && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Update swift/swift-tool-version file with latest release

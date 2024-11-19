@@ -11,13 +11,6 @@ hidden currentVersionStep: Step
 hidden currentVersionOutputVar: String
 hidden updateStep: Function1<String, Step>
 
-local checkout = new ActionStep {
-    uses = "actions/checkout@v3"
-    with = new Mapping {
-        ["fetch-depth"] = 0
-    }
-}
-
 name = "Update build to include the latest \(represents) releases"
 
 on = new On {
@@ -42,7 +35,7 @@ jobs = new Mapping {
             ["latest-version"] = "${{ steps.cleaned-tool-release.outputs.release }}"
         }
         steps = new Listing {
-            checkout
+            base.checkout
             currentVersionStep
             new ActionStep {
                 name = "Get latest \(represents) version"
@@ -82,7 +75,7 @@ jobs = new Mapping {
             ["pull-requests"] = "write"
         }
         steps = new Listing {
-            checkout
+            base.checkout
             updateStep.apply("${{ needs.get-current-version.outputs.latest-version }}")
             new ActionStep {
                 name = "Setup node for gomplate"

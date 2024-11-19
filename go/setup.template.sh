@@ -10,4 +10,4 @@ echo "ARCH=$ARCH"
 
 curl -L -o /pkl https://github.com/apple/pkl/releases/download/{{{ env.pkl_version }}}/pkl-linux-$ARCH
 chmod +x /pkl
-mv pkl /usr/local/bin/pkl
+mv /pkl /usr/local/bin/pkl

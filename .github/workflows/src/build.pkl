@@ -119,7 +119,7 @@ jobs = new Mapping {
             base.checkout
             new ActionStep {
                 name = "Install GitVersion"
-                uses = "gittools/actions/gitversion/setup@v0.9.6"
+                uses = "gittools/actions/gitversion/setup@v3.0.0"
                 with = new Mapping {
                     ["versionSpec"] = "5.x"
                 }
@@ -127,7 +127,7 @@ jobs = new Mapping {
             new ActionStep {
                 name = "Use GitVersion"
                 id = "gitversion"
-                uses = "gittools/actions/gitversion/execute@v0.9.6"
+                uses = "gittools/actions/gitversion/execute@v3.0.0"
                 with = new Mapping {
                     ["useConfigFile"] = true
                     ["configFilePath"] = "./gitversion.yml"
@@ -153,15 +153,21 @@ jobs = new Mapping {
         steps = new Listing {
             base.checkout
             new ActionStep {
+                name = "Create tag for release"
+                uses = "rickstaa/action-create-tag@v1"
+                with = new Mapping {
+                    ["tag"] = "v${{ needs.version.outputs.version }}"
+                }
+            }
+            new ActionStep {
                 id = "create_release"
-                uses = "actions/create-release@v1"
+                uses = "softprops/action-gh-release@v2"
                 env = new Mapping {
                     ["GITHUB_TOKEN"] = "${{ secrets.GITHUB_TOKEN }}"
                 }
                 with = new Mapping {
                     ["tag_name"] = "v${{ needs.version.outputs.version }}"
-                    ["release_name"] = "Release ${{ needs.version.outputs.version }}"
-                    ["draft"] = false
+                    ["name"] = "Release ${{ needs.version.outputs.version }}"
                     ["prerelease"] = "${{ github.ref == 'refs/heads/develop' }}"
                 }
             }
