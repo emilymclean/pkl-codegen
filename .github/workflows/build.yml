@@ -193,7 +193,7 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: Build and push Docker image
       if: github.ref == 'refs/heads/main'
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v6
       with:
         context: java
         platforms: linux/amd64,linux/arm64/v8
@@ -206,7 +206,7 @@ jobs:
           ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}-${{ needs.version.outputs.major }}
     - name: Build and push Docker image
       if: github.ref != 'refs/heads/main'
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v6
       with:
         context: java
         platforms: linux/amd64,linux/arm64/v8
@@ -265,7 +265,7 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: Build and push Docker image
       if: github.ref == 'refs/heads/main'
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v6
       with:
         context: kotlin
         platforms: linux/amd64,linux/arm64/v8
@@ -278,7 +278,7 @@ jobs:
           ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}-${{ needs.version.outputs.major }}
     - name: Build and push Docker image
       if: github.ref != 'refs/heads/main'
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v6
       with:
         context: kotlin
         platforms: linux/amd64,linux/arm64/v8
@@ -337,7 +337,7 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: Build and push Docker image
       if: github.ref == 'refs/heads/main'
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v6
       with:
         context: doc
         platforms: linux/amd64,linux/arm64/v8
@@ -350,7 +350,7 @@ jobs:
           ghcr.io/${{ env.REPOSITORY_LC }}-doc:${{ matrix.version }}-${{ needs.version.outputs.major }}
     - name: Build and push Docker image
       if: github.ref != 'refs/heads/main'
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v6
       with:
         context: doc
         platforms: linux/amd64,linux/arm64/v8
@@ -413,7 +413,7 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: Build and push Docker image
       if: github.ref == 'refs/heads/main'
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v6
       with:
         context: swift
         platforms: linux/amd64,linux/arm64/v8
@@ -426,7 +426,7 @@ jobs:
           ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}-${{ needs.version.outputs.major }}
     - name: Build and push Docker image
       if: github.ref != 'refs/heads/main'
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v6
       with:
         context: swift
         platforms: linux/amd64,linux/arm64/v8
@@ -487,7 +487,7 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: Build and push Docker image
       if: github.ref == 'refs/heads/main'
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v6
       with:
         context: go
         platforms: linux/amd64,linux/arm64/v8
@@ -500,7 +500,7 @@ jobs:
           ghcr.io/${{ env.REPOSITORY_LC }}-go:${{ matrix.version }}-${{ needs.version.outputs.major }}
     - name: Build and push Docker image
       if: github.ref != 'refs/heads/main'
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v6
       with:
         context: go
         platforms: linux/amd64,linux/arm64/v8
