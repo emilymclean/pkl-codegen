@@ -15,7 +15,6 @@ currentVersionOutputVar = "SWIFT_TOOL_VERSION"
 updateStep = (currentVersion: String) -> new CommandStep {
     name = "Update swift/swift-tool-version file with latest release"
     run = """
-    currentVersion="\(currentVersion)"
-    echo "${currentVersion##*v}" > swift/swift-tool-version
+    echo "\(currentVersion)" > swift/swift-tool-version
     """
 }

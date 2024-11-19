@@ -15,7 +15,6 @@ currentVersionOutputVar = "GO_TOOL_VERSION"
 updateStep = (currentVersion: String) -> new CommandStep {
     name = "Update go/go-tool-version file with latest release"
     run = """
-    currentVersion="\(currentVersion)"
-    echo "${currentVersion##*v}" > go/go-tool-version
+    echo "\(currentVersion)" > go/go-tool-version
     """
 }
