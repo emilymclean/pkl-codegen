@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       current-version: ${{ env.SWIFT_TOOL_VERSION }}
-      latest-version: ${{ steps.tool-release.outputs.release }}
+      latest-version: ${{ steps.cleaned-tool-release.outputs.release }}
     steps:
     - uses: actions/checkout@v4
       with:
@@ -26,6 +26,11 @@ jobs:
         owner: apple
         repo: pkl-swift
         excludes: prerelease, draft
+    - id: cleaned-tool-release
+      name: Strip leading "v" from the version string
+      run: |-
+        latestVersion="${{ steps.tool-release.outputs.release }}"
+        echo "release=${latestVersion##*v}" >> $GITHUB_OUTPUT
     - name: Job Summary
       run: |-
         echo "### Versions" >> $GITHUB_STEP_SUMMARY
