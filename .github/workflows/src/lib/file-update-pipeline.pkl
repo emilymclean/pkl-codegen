@@ -32,7 +32,7 @@ jobs = new Mapping {
     [versionJobName] = new Job {
         outputs = new Mapping {
             ["current-version"] = "${{ env.\(currentVersionOutputVar) }}"
-            ["latest-version"] = "${{ steps.tool-release.outputs.release }}"
+            ["latest-version"] = "${{ steps.cleaned-tool-release.outputs.release }}"
         }
         steps = new Listing {
             base.checkout
@@ -46,6 +46,14 @@ jobs = new Mapping {
                     ["repo"] = repo
                     ["excludes"] = "prerelease, draft"
                 }
+            }
+            new CommandStep {
+                name = "Strip leading \"v\" from the version string"
+                id = "cleaned-tool-release"
+                run = """
+                latestVersion="${{ steps.tool-release.outputs.release }}"
+                echo "release=${latestVersion##*v}" >> $GITHUB_OUTPUT
+                """
             }
             new CommandStep {
                 name = "Job Summary"

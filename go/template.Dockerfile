@@ -1,4 +1,4 @@
-FROM golang:1.23.3-bullseye
+FROM golang:1.23.6-bullseye
 
 RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -yqq curl
