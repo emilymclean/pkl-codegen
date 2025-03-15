@@ -71,78 +71,73 @@ jobs:
   was-updated-java:
     runs-on: ubuntu-latest
     outputs:
-      any-changed: ${{ steps.changed.outputs.any_changed }}
+      any-changed: ${{ env.any_changed }}
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    - id: changed
-      uses: tj-actions/changed-files@v45
-      with:
-        files: |-
-          java/**
-          templates/entrypoint.template.sh
-          pkl-versions
+    - run: |-
+        if git diff-tree --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(java/\*\*|templates/entrypoint.template.sh|pkl-versions)'; then
+            echo "any_changed=true" >> "$GITHUB_ENV"
+        else
+            echo "any_changed=false" >> "$GITHUB_ENV"
+        fi
   was-updated-kotlin:
     runs-on: ubuntu-latest
     outputs:
-      any-changed: ${{ steps.changed.outputs.any_changed }}
+      any-changed: ${{ env.any_changed }}
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    - id: changed
-      uses: tj-actions/changed-files@v45
-      with:
-        files: |-
-          kotlin/**
-          templates/entrypoint.template.sh
-          pkl-versions
+    - run: |-
+        if git diff-tree --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(kotlin/\*\*|templates/entrypoint.template.sh|pkl-versions)'; then
+            echo "any_changed=true" >> "$GITHUB_ENV"
+        else
+            echo "any_changed=false" >> "$GITHUB_ENV"
+        fi
   was-updated-doc:
     runs-on: ubuntu-latest
     outputs:
-      any-changed: ${{ steps.changed.outputs.any_changed }}
+      any-changed: ${{ env.any_changed }}
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    - id: changed
-      uses: tj-actions/changed-files@v45
-      with:
-        files: |-
-          doc/**
-          templates/entrypoint.template.sh
-          pkl-versions
+    - run: |-
+        if git diff-tree --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(doc/\*\*|templates/entrypoint.template.sh|pkl-versions)'; then
+            echo "any_changed=true" >> "$GITHUB_ENV"
+        else
+            echo "any_changed=false" >> "$GITHUB_ENV"
+        fi
   was-updated-swift:
     runs-on: ubuntu-latest
     outputs:
-      any-changed: ${{ steps.changed.outputs.any_changed }}
+      any-changed: ${{ env.any_changed }}
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    - id: changed
-      uses: tj-actions/changed-files@v45
-      with:
-        files: |-
-          swift/**
-          templates/entrypoint.template.sh
-          pkl-versions
+    - run: |-
+        if git diff-tree --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(swift/\*\*|templates/entrypoint.template.sh|pkl-versions)'; then
+            echo "any_changed=true" >> "$GITHUB_ENV"
+        else
+            echo "any_changed=false" >> "$GITHUB_ENV"
+        fi
   was-updated-go:
     runs-on: ubuntu-latest
     outputs:
-      any-changed: ${{ steps.changed.outputs.any_changed }}
+      any-changed: ${{ env.any_changed }}
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    - id: changed
-      uses: tj-actions/changed-files@v45
-      with:
-        files: |-
-          go/**
-          templates/entrypoint.template.sh
-          pkl-versions
+    - run: |-
+        if git diff-tree --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(go/\*\*|templates/entrypoint.template.sh|pkl-versions)'; then
+            echo "any_changed=true" >> "$GITHUB_ENV"
+        else
+            echo "any_changed=false" >> "$GITHUB_ENV"
+        fi
   build-java:
     permissions:
       contents: read
