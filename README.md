@@ -25,3 +25,6 @@ The supported platforms/images are as follows:
 | Swift  	| `pkl-codegen-swift`  	|
 | Go      	| `pkl-codegen-go`  	|
 | PklDoc 	| `pkl-codegen-doc`    	|
+
+### Versioning
+Versions of the container generally adhere to the following versioning format: `<pkl version>-<container release version>`. For example, for pkl `0.28.1` and release `1.0.0`, this would be `0.28.1-1.0.0`. In addition, a tag for the container major version, nightly version, and major+nightly version is also published. In the same circumstance as above, this would be `0.28.1-1`, `0.28.1-nightly`, and `0.28.1-1-nightly` respectively. It is **highly** recommended to at least pin to a major version to prevent breaking changes from accidentally interfering with use. 
