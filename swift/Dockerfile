@@ -1,4 +1,4 @@
-FROM swift:5.10-jammy
+FROM swift:6.1.3-jammy
 
 RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -yqq curl clang libpython2.7 libpython2.7-dev
