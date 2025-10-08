@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 pos_args=()
 named_args=()

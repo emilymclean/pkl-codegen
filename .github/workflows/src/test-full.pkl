@@ -1,10 +1,11 @@
 amends "package://github.com/emilymclean/pkl-github-actions/releases/download/v0.1.0-alpha.96/pkl-github-actions@0.1.0-alpha.96#/actions.pkl"
 import "lib/base.pkl"
 
-name = "Test Java, Kotlin, and Swift Docker images on latest version"
+name = "Test Java, Kotlin, and Swift Docker images on all versions"
 
 on = new On {
-    pull_request = new PullRequest {
+    workflow_dispatch = new WorkflowDispatch {}
+    push = new Push {
         branches = new Listing {
             "main"
             "develop"
@@ -13,26 +14,17 @@ on = new On {
 }
 
 jobs = new Mapping {
-    ["pkl-versions"] = new Job {
-        outputs = new Mapping {
-            ["versions"] = "${{ env.versions }}"
-        }
-        steps = new Listing {
-            base.checkout
-            new CommandStep {
-                run = """
-                mapfile -t pklversions < "pkl-versions"
-                json=$(jq -n -c --argjson arr "$(printf '%s\n' "${pklversions[@]}" | jq -R . | jq -s '[.[0], .[-1]]')" '{"version": $arr}')
-                echo "versions=$(echo "$json")" >> ${GITHUB_ENV}
-                """
-            }
-        }
+    ["pkl-versions"] = base.pklVersionsJob
+    for (platform in base.PLATFORMS) {
+        ["was-updated-\(platform)"] = base.wasUpdated(platform)
     }
     for (platform in base.PLATFORMS) {
         ["test-\(platform)"] = (base.testPlatform(platform, "${{ matrix.version }}", false)) {
             needs = new Listing {
                 "pkl-versions"
+                "was-updated-\(platform)"
             }
+            `if` = "needs.was-updated-\(platform).outputs.any-changed == 'true'"
             strategy = new JobStrategy {
                 matrix = "${{fromJson(needs.pkl-versions.outputs.versions)}}"
             }

@@ -8,6 +8,16 @@ hidden const PLATFORM_PKLDOC = "doc"
 hidden const PLATFORM_GO = "go"
 
 hidden const RENDER_TEMPLATE_ACTION = "emilymclean/template-render-action@v1.0.2"
+// https://stackoverflow.com/questions/4023830/how-to-compare-two-strings-in-dot-separated-version-format-in-bash
+hidden const VERLTE = """
+verlte() {
+    [  "$1" = "`echo -e "$1\n$2" | sort -V | head -n1`" ]
+}
+
+verlt() {
+    [ "$1" = "$2" ] && return 1 || verlte $1 $2
+}
+"""
 
 typealias Platform = "java"|"kotlin"|"swift"|"doc"|"go"
 
@@ -78,7 +88,9 @@ function renderForPlatform(platform: Platform, version: String): Listing<Step> =
         new CommandStep {
             name = "Read swift-tool-version"
             run = """
-            echo "swift_tool_version=$(cat swift/swift-tool-version)" >> $GITHUB_ENV
+            \(VERLTE)
+
+            echo "swift_tool_version=$(verlt \(version) 0.29.0 && echo "0.4.2" || cat swift/swift-tool-version)" >> $GITHUB_ENV
             """
         }
     else null
@@ -86,7 +98,9 @@ function renderForPlatform(platform: Platform, version: String): Listing<Step> =
         new CommandStep {
             name = "Read go-tool-version"
             run = """
-            echo "go_tool_version=$(cat go/go-tool-version)" >> $GITHUB_ENV
+            \(VERLTE)
+
+            echo "go_tool_version=$(verlt \(version) 0.29.0 && echo "0.10.0" || cat go/go-tool-version)" >> $GITHUB_ENV
             """
         }
     else null
@@ -159,3 +173,142 @@ function renderForPlatform(platform: Platform, version: String): Listing<Step> =
         }
     else null
 }.toList().filterNonNull().toListing()
+
+function buildArgsForPlatform(platform: Platform, version: String): Listing<Step> = new Listing {
+    if (platform == PLATFORM_SWIFT)
+        new CommandStep {
+            name = "Set swift image version"
+            run = """
+            \(VERLTE)
+
+            echo "BUILD_ARGS=$(verlt \(version) 0.29.0 && echo "SWIFT_VERSION=5.10" || echo "SWIFT_VERSION=6.1.3")" >> $GITHUB_ENV
+            """
+        }
+    else null
+}.toList().filterNonNull().toListing()
+
+local function testString(platform: String, extraFiles: List<String>): String = """
+set -e
+# Test using new style explicitly listing -o
+docker run --rm -v "./test-data/:/data" test/\(platform):latest /data/example.pkl \(if(extraFiles.length > 0) extraFiles.join(" ") else "") -o /data/newstyle-out
+# Test using new style explicitly listing --output-dir
+docker run --rm -v "./test-data/:/data" test/\(platform):latest /data/example.pkl \(if(extraFiles.length > 0) extraFiles.join(" ") else "") --output-dir /data/newstyle-full-out
+# Test using old style without -o
+docker run --rm -v "./test-data/:/data" test/\(platform):latest /data/example.pkl \(if(extraFiles.length > 0) extraFiles.join(" ") else "") /data/oldstyle-out
+
+ls test-data
+echo "Output folder contents:"
+ls test-data/newstyle-out
+echo "Output Full folder contents:"
+ls test-data/newstyle-full-out
+"""
+
+function testPlatform(platform: String, version: String, upload: Boolean): Job = new Job {
+    steps = new Listing {
+        checkout
+        currentVersion
+        ...renderForPlatform(platform, version)
+        ...buildArgsForPlatform(platform, version)
+        ...dockerSetup()
+        ...dockerBuild(
+            new Mapping {
+                ["context"] = platform
+                ["platforms"] = "linux/amd64"
+                ["load"] = true
+                ["tags"] = """
+                test/\(platform):latest
+                """
+                ["build-args"] = "${{ env.BUILD_ARGS }}"
+            },
+            null
+        )
+        ...new Listing {
+            if (platform == PLATFORM_PKLDOC)
+                new CommandStep {
+                    name = "Generate and test"
+                    run = testString(platform, List("\"/data/example space.pkl\"", "/data/doc-package-info.pkl"))
+                }
+            else if (platform == PLATFORM_JAVA) 
+                new CommandStep {
+                    name = "Generate and test"
+                    run = testString(platform, List("--generate-getters", "/data/test.pkl"))
+                }
+            else if (platform == PLATFORM_GO)
+                new CommandStep {
+                    name = "Generate and test"
+                    run = """
+                    docker run --rm -v "./test-data/:/data" test/\(platform):latest /data/example.pkl --mapping example=github.com/emilymclean/pkl-codegen/example --output-path /data/newstyle-out
+
+                    echo "Output folder contents:"
+                    ls test-data/newstyle-out
+                    """
+                }
+            else
+                new CommandStep {
+                    name = "Generate and test"
+                    run = testString(platform, List("\"/data/example space.pkl\""))
+                }
+            new CommandStep {
+                name = "Test if any output"
+                run = """
+                set -f
+                OUTPUT=$(ls -A "test-data/newstyle-out")
+                set +f
+
+                if [ -z "$OUTPUT" ]; then
+                    echo "No output in newstyle-out, failing"
+                    exit 1
+                fi
+                """
+            }
+            ...(
+                if (upload) 
+                    new Listing {
+                        new ActionStep {
+                            uses = "actions/upload-artifact@v4"
+                            with = new Mapping {
+                                ["name"] = "\(platform)-output"
+                                ["path"] = "test-data/newstyle-out/"
+                            }
+                        }
+                    }
+                else new Listing {}
+            )
+        }
+    }
+}
+
+// Would love to have this as a matrix but that is annoying to read
+function wasUpdated(dir: String): Job = new Job {
+    outputs = new Mapping {
+        ["any-changed"] = "${{ env.any_changed }}"
+    }
+    steps = new Listing {
+        checkout
+        new CommandStep {
+            run = """
+            if git diff --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(\(dir)/.*|templates/entrypoint.template.sh|pkl-versions)'; then
+                echo "any_changed=true" >> "$GITHUB_ENV"
+            else
+                echo "any_changed=false" >> "$GITHUB_ENV"
+            fi
+            """
+        }
+    }
+}
+
+hidden pklVersionsJob = new Job {
+    outputs = new Mapping {
+        ["versions"] = "${{ env.versions }}"
+    }
+    steps = new Listing {
+        checkout
+        new CommandStep {
+            run = """
+            mapfile -t pklversions < "pkl-versions"
+            json=$(jq -n -c --argjson arr "$(printf '%s\n' "${pklversions[@]}" | jq -R . | jq -s .)" '{"version": $arr}')
+            echo "versions=$(echo "$json")" >> ${GITHUB_ENV}
+            """
+        }
+    }
+}

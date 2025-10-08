@@ -1,7 +1,4 @@
-FROM ubuntu:22.04
-
-RUN apt-get update
-RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -yqq openjdk-17-jdk openjdk-17-jre
+FROM eclipse-temurin:17
 
 COPY project/ /java/
 RUN cd /java && \
