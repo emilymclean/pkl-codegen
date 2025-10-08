@@ -1,0 +1,429 @@
+name: Test Java, Kotlin, and Swift Docker images on all versions
+'on':
+  pull_request:
+    branches:
+    - main
+    - develop
+  workflow_dispatch: {}
+jobs:
+  pkl-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      versions: ${{ env.versions }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - run: |-
+        mapfile -t pklversions < "pkl-versions"
+        json=$(jq -n -c --argjson arr "$(printf '%s
+        ' "${pklversions[@]}" | jq -R . | jq -s .)" '{"version": $arr}')
+        echo "versions=$(echo "$json")" >> ${GITHUB_ENV}
+  was-updated-java:
+    runs-on: ubuntu-latest
+    outputs:
+      any-changed: ${{ env.any_changed }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - run: |-
+        if git diff --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(java/.*|templates/entrypoint.template.sh|pkl-versions)'; then
+            echo "any_changed=true" >> "$GITHUB_ENV"
+        else
+            echo "any_changed=false" >> "$GITHUB_ENV"
+        fi
+  was-updated-kotlin:
+    runs-on: ubuntu-latest
+    outputs:
+      any-changed: ${{ env.any_changed }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - run: |-
+        if git diff --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(kotlin/.*|templates/entrypoint.template.sh|pkl-versions)'; then
+            echo "any_changed=true" >> "$GITHUB_ENV"
+        else
+            echo "any_changed=false" >> "$GITHUB_ENV"
+        fi
+  was-updated-doc:
+    runs-on: ubuntu-latest
+    outputs:
+      any-changed: ${{ env.any_changed }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - run: |-
+        if git diff --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(doc/.*|templates/entrypoint.template.sh|pkl-versions)'; then
+            echo "any_changed=true" >> "$GITHUB_ENV"
+        else
+            echo "any_changed=false" >> "$GITHUB_ENV"
+        fi
+  was-updated-swift:
+    runs-on: ubuntu-latest
+    outputs:
+      any-changed: ${{ env.any_changed }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - run: |-
+        if git diff --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(swift/.*|templates/entrypoint.template.sh|pkl-versions)'; then
+            echo "any_changed=true" >> "$GITHUB_ENV"
+        else
+            echo "any_changed=false" >> "$GITHUB_ENV"
+        fi
+  was-updated-go:
+    runs-on: ubuntu-latest
+    outputs:
+      any-changed: ${{ env.any_changed }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - run: |-
+        if git diff --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(go/.*|templates/entrypoint.template.sh|pkl-versions)'; then
+            echo "any_changed=true" >> "$GITHUB_ENV"
+        else
+            echo "any_changed=false" >> "$GITHUB_ENV"
+        fi
+  test-java:
+    needs:
+    - pkl-versions
+    - was-updated-java
+    if: needs.was-updated-java.outputs.any-changed == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{fromJson(needs.pkl-versions.outputs.versions)}}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Get current latest supported pkl version
+      run: |-
+        mapfile -t pklversions < "pkl-versions"
+        echo "PKL_VERSION=${pklversions[-1]}" >> $GITHUB_ENV
+    - name: Render build.template.gradle
+      env:
+        pkl_version: ${{ matrix.version }}
+      uses: emilymclean/template-render-action@v1.0.2
+      with:
+        template-file: java/project/build.template.gradle
+        output-file: java/project/build.gradle
+        engine: mustache
+    - name: Render endpoint.sh
+      env:
+        call: java -cp /pklgen.jar org.pkl.codegen.java.Main
+      uses: emilymclean/template-render-action@v1.0.2
+      with:
+        template-file: templates/entrypoint.template.sh
+        output-file: java/entrypoint.sh
+        engine: mustache
+    - name: Make endpoint.sh executable
+      run: chmod +x java/entrypoint.sh
+    - name: Setup QEMU
+      uses: docker/setup-qemu-action@v3
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    - name: Log in to the Container registry
+      uses: docker/login-action@v3
+      with:
+        registry: https://ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v6
+      with:
+        context: java
+        platforms: linux/amd64
+        load: true
+        tags: test/java:latest
+    - run: |-
+        # Test using new style explicitly listing -o
+        docker run --rm -v "./test-data/:/data" test/java:latest /data/example.pkl --generate-getters /data/test.pkl -o /data/newstyle-out
+        # Test using new style explicitly listing --output-dir
+        docker run --rm -v "./test-data/:/data" test/java:latest /data/example.pkl --generate-getters /data/test.pkl --output-dir /data/newstyle-full-out
+        # Test using old style without -o
+        docker run --rm -v "./test-data/:/data" test/java:latest /data/example.pkl --generate-getters /data/test.pkl /data/oldstyle-out
+
+        ls test-data
+        echo "Output folder contents:"
+        ls test-data/newstyle-out
+        echo "Output Full folder contents:"
+        ls test-data/newstyle-full-out
+    - uses: actions/upload-artifact@v4
+      with:
+        name: java-output
+        path: test-data/newstyle-out/
+  test-kotlin:
+    needs:
+    - pkl-versions
+    - was-updated-kotlin
+    if: needs.was-updated-kotlin.outputs.any-changed == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{fromJson(needs.pkl-versions.outputs.versions)}}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Get current latest supported pkl version
+      run: |-
+        mapfile -t pklversions < "pkl-versions"
+        echo "PKL_VERSION=${pklversions[-1]}" >> $GITHUB_ENV
+    - name: Render build.template.gradle
+      env:
+        pkl_version: ${{ matrix.version }}
+      uses: emilymclean/template-render-action@v1.0.2
+      with:
+        template-file: kotlin/project/build.template.gradle
+        output-file: kotlin/project/build.gradle
+        engine: mustache
+    - name: Render endpoint.sh
+      env:
+        call: java -cp /pklgen.jar org.pkl.codegen.kotlin.Main
+      uses: emilymclean/template-render-action@v1.0.2
+      with:
+        template-file: templates/entrypoint.template.sh
+        output-file: kotlin/entrypoint.sh
+        engine: mustache
+    - name: Make endpoint.sh executable
+      run: chmod +x kotlin/entrypoint.sh
+    - name: Setup QEMU
+      uses: docker/setup-qemu-action@v3
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    - name: Log in to the Container registry
+      uses: docker/login-action@v3
+      with:
+        registry: https://ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v6
+      with:
+        context: kotlin
+        platforms: linux/amd64
+        load: true
+        tags: test/kotlin:latest
+    - run: |-
+        # Test using new style explicitly listing -o
+        docker run --rm -v "./test-data/:/data" test/kotlin:latest /data/example.pkl "/data/example space.pkl" -o /data/newstyle-out
+        # Test using new style explicitly listing --output-dir
+        docker run --rm -v "./test-data/:/data" test/kotlin:latest /data/example.pkl "/data/example space.pkl" --output-dir /data/newstyle-full-out
+        # Test using old style without -o
+        docker run --rm -v "./test-data/:/data" test/kotlin:latest /data/example.pkl "/data/example space.pkl" /data/oldstyle-out
+
+        ls test-data
+        echo "Output folder contents:"
+        ls test-data/newstyle-out
+        echo "Output Full folder contents:"
+        ls test-data/newstyle-full-out
+    - uses: actions/upload-artifact@v4
+      with:
+        name: kotlin-output
+        path: test-data/newstyle-out/
+  test-doc:
+    needs:
+    - pkl-versions
+    - was-updated-doc
+    if: needs.was-updated-doc.outputs.any-changed == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{fromJson(needs.pkl-versions.outputs.versions)}}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Get current latest supported pkl version
+      run: |-
+        mapfile -t pklversions < "pkl-versions"
+        echo "PKL_VERSION=${pklversions[-1]}" >> $GITHUB_ENV
+    - name: Render build.template.gradle
+      env:
+        pkl_version: ${{ matrix.version }}
+      uses: emilymclean/template-render-action@v1.0.2
+      with:
+        template-file: doc/project/build.template.gradle
+        output-file: doc/project/build.gradle
+        engine: mustache
+    - name: Render endpoint.sh
+      env:
+        call: java -cp /pklgen.jar org.pkl.doc.Main
+      uses: emilymclean/template-render-action@v1.0.2
+      with:
+        template-file: templates/entrypoint.template.sh
+        output-file: doc/entrypoint.sh
+        engine: mustache
+    - name: Make endpoint.sh executable
+      run: chmod +x doc/entrypoint.sh
+    - name: Setup QEMU
+      uses: docker/setup-qemu-action@v3
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    - name: Log in to the Container registry
+      uses: docker/login-action@v3
+      with:
+        registry: https://ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v6
+      with:
+        context: doc
+        platforms: linux/amd64
+        load: true
+        tags: test/doc:latest
+    - run: |-
+        # Test using new style explicitly listing -o
+        docker run --rm -v "./test-data/:/data" test/doc:latest /data/example.pkl "/data/example space.pkl" /data/doc-package-info.pkl -o /data/newstyle-out
+        # Test using new style explicitly listing --output-dir
+        docker run --rm -v "./test-data/:/data" test/doc:latest /data/example.pkl "/data/example space.pkl" /data/doc-package-info.pkl --output-dir /data/newstyle-full-out
+        # Test using old style without -o
+        docker run --rm -v "./test-data/:/data" test/doc:latest /data/example.pkl "/data/example space.pkl" /data/doc-package-info.pkl /data/oldstyle-out
+
+        ls test-data
+        echo "Output folder contents:"
+        ls test-data/newstyle-out
+        echo "Output Full folder contents:"
+        ls test-data/newstyle-full-out
+    - uses: actions/upload-artifact@v4
+      with:
+        name: doc-output
+        path: test-data/newstyle-out/
+  test-swift:
+    needs:
+    - pkl-versions
+    - was-updated-swift
+    if: needs.was-updated-swift.outputs.any-changed == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{fromJson(needs.pkl-versions.outputs.versions)}}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Get current latest supported pkl version
+      run: |-
+        mapfile -t pklversions < "pkl-versions"
+        echo "PKL_VERSION=${pklversions[-1]}" >> $GITHUB_ENV
+    - name: Read swift-tool-version
+      run: echo "swift_tool_version=$(cat swift/swift-tool-version)" >> $GITHUB_ENV
+    - name: Render setup.template.sh
+      env:
+        pkl_version: ${{ matrix.version }}
+      uses: emilymclean/template-render-action@v1.0.2
+      with:
+        template-file: swift/setup.template.sh
+        output-file: swift/setup.sh
+        engine: mustache
+    - name: Make setup.sh executable
+      run: chmod +x swift/setup.sh
+    - name: Render endpoint.sh
+      env:
+        call: LD_LIBRARY_PATH=/usr/share/swift/usr/lib/swift/linux PATH=$PATH:/usr/share/swift/usr/bin/ /pkl-gen-swift
+      uses: emilymclean/template-render-action@v1.0.2
+      with:
+        template-file: templates/entrypoint.template.sh
+        output-file: swift/entrypoint.sh
+        engine: mustache
+    - name: Make endpoint.sh executable
+      run: chmod +x swift/entrypoint.sh
+    - name: Setup QEMU
+      uses: docker/setup-qemu-action@v3
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    - name: Log in to the Container registry
+      uses: docker/login-action@v3
+      with:
+        registry: https://ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v6
+      with:
+        context: swift
+        platforms: linux/amd64
+        load: true
+        tags: test/swift:latest
+    - run: |-
+        # Test using new style explicitly listing -o
+        docker run --rm -v "./test-data/:/data" test/swift:latest /data/example.pkl "/data/example space.pkl" -o /data/newstyle-out
+        # Test using new style explicitly listing --output-dir
+        docker run --rm -v "./test-data/:/data" test/swift:latest /data/example.pkl "/data/example space.pkl" --output-dir /data/newstyle-full-out
+        # Test using old style without -o
+        docker run --rm -v "./test-data/:/data" test/swift:latest /data/example.pkl "/data/example space.pkl" /data/oldstyle-out
+
+        ls test-data
+        echo "Output folder contents:"
+        ls test-data/newstyle-out
+        echo "Output Full folder contents:"
+        ls test-data/newstyle-full-out
+    - uses: actions/upload-artifact@v4
+      with:
+        name: swift-output
+        path: test-data/newstyle-out/
+  test-go:
+    needs:
+    - pkl-versions
+    - was-updated-go
+    if: needs.was-updated-go.outputs.any-changed == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{fromJson(needs.pkl-versions.outputs.versions)}}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Get current latest supported pkl version
+      run: |-
+        mapfile -t pklversions < "pkl-versions"
+        echo "PKL_VERSION=${pklversions[-1]}" >> $GITHUB_ENV
+    - name: Read go-tool-version
+      run: echo "go_tool_version=$(cat go/go-tool-version)" >> $GITHUB_ENV
+    - name: Render template.Dockerfile
+      env:
+        pkl_version: ${{ matrix.version }}
+      uses: emilymclean/template-render-action@v1.0.2
+      with:
+        template-file: go/template.Dockerfile
+        output-file: go/Dockerfile
+        engine: mustache
+    - name: Render setup.template.sh
+      env:
+        pkl_version: ${{ matrix.version }}
+      uses: emilymclean/template-render-action@v1.0.2
+      with:
+        template-file: go/setup.template.sh
+        output-file: go/setup.sh
+        engine: mustache
+    - name: Make setup.sh executable
+      run: chmod +x go/setup.sh
+    - name: Setup QEMU
+      uses: docker/setup-qemu-action@v3
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    - name: Log in to the Container registry
+      uses: docker/login-action@v3
+      with:
+        registry: https://ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v6
+      with:
+        context: go
+        platforms: linux/amd64
+        load: true
+        tags: test/go:latest
+    - run: |-
+        docker run --rm -v "./test-data/:/data" test/go:latest /data/example.pkl --mapping example=github.com/emilymclean/pkl-codegen/example --output-path /data/newstyle-out
+
+        echo "Output folder contents:"
+        ls test-data/newstyle-out
+    - uses: actions/upload-artifact@v4
+      with:
+        name: go-output
+        path: test-data/newstyle-out/

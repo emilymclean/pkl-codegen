@@ -1,0 +1,34 @@
+amends "package://github.com/emilymclean/pkl-github-actions/releases/download/v0.1.0-alpha.96/pkl-github-actions@0.1.0-alpha.96#/actions.pkl"
+import "lib/base.pkl"
+
+name = "Test Java, Kotlin, and Swift Docker images on all versions"
+
+on = new On {
+    pull_request = new PullRequest {
+        branches = new Listing {
+            "main"
+            "develop"
+        }
+    }
+    workflow_dispatch = new WorkflowDispatch {}
+}
+
+jobs = new Mapping {
+    ["pkl-versions"] = base.pklVersionsJob
+    for (platform in base.PLATFORMS) {
+        ["was-updated-\(platform)"] = base.wasUpdated(platform)
+    }
+    for (platform in base.PLATFORMS) {
+        ["test-\(platform)"] = (base.testPlatform(platform, "${{ matrix.version }}")) {
+            needs = new Listing {
+                "pkl-versions"
+                "was-updated-\(platform)"
+            }
+            `if` = "needs.was-updated-\(platform).outputs.any-changed == 'true'"
+            strategy = new JobStrategy {
+                matrix = "${{fromJson(needs.pkl-versions.outputs.versions)}}"
+            }
+        }
+    }
+}.toMap().filter((k,v) -> v != null).toMapping()
+

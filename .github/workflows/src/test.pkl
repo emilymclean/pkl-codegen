@@ -1,71 +1,6 @@
 amends "package://github.com/emilymclean/pkl-github-actions/releases/download/v0.1.0-alpha.96/pkl-github-actions@0.1.0-alpha.96#/actions.pkl"
 import "lib/base.pkl"
 
-local function testString(platform: String, extraFiles: List<String>): String = """
-# Test using new style explicitly listing -o
-docker run --rm -v "./test-data/:/data" test/\(platform):latest /data/example.pkl \(if(extraFiles.length > 0) extraFiles.join(" ") else "") -o /data/newstyle-out
-# Test using new style explicitly listing --output-dir
-docker run --rm -v "./test-data/:/data" test/\(platform):latest /data/example.pkl \(if(extraFiles.length > 0) extraFiles.join(" ") else "") --output-dir /data/newstyle-full-out
-# Test using old style without -o
-docker run --rm -v "./test-data/:/data" test/\(platform):latest /data/example.pkl \(if(extraFiles.length > 0) extraFiles.join(" ") else "") /data/oldstyle-out
-
-ls test-data
-echo "Output folder contents:"
-ls test-data/newstyle-out
-echo "Output Full folder contents:"
-ls test-data/newstyle-full-out
-"""
-
-local function testPlatform(platform: String): Job = new Job {
-    steps = new Listing {
-        base.checkout
-        base.currentVersion
-        ...base.renderForPlatform(platform, "${{ env.PKL_VERSION }}")
-        ...base.dockerSetup()
-        ...base.dockerBuild(
-            new Mapping {
-                ["context"] = platform
-                ["platforms"] = "linux/amd64"
-                ["load"] = true
-                ["tags"] = """
-                test/\(platform):latest
-                """
-            },
-            null
-        )
-        ...new Listing {
-            if (platform == base.PLATFORM_PKLDOC)
-                new CommandStep {
-                    run = testString(platform, List("\"/data/example space.pkl\"", "/data/doc-package-info.pkl"))
-                }
-            else if (platform == base.PLATFORM_JAVA) 
-                new CommandStep {
-                    run = testString(platform, List("--generate-getters", "/data/test.pkl"))
-                }
-            else if (platform == base.PLATFORM_GO)
-                new CommandStep {
-                    run = """
-                    docker run --rm -v "./test-data/:/data" test/\(platform):latest /data/example.pkl --mapping example=github.com/emilymclean/pkl-codegen/example --output-path /data/newstyle-out
-
-                    echo "Output folder contents:"
-                    ls test-data/newstyle-out
-                    """
-                }
-            else
-                new CommandStep {
-                    run = testString(platform, List("\"/data/example space.pkl\""))
-                }
-            new ActionStep {
-                uses = "actions/upload-artifact@v4"
-                with = new Mapping {
-                    ["name"] = "\(platform)-output"
-                    ["path"] = "test-data/newstyle-out/"
-                }
-            }
-        }
-    }
-}
-
 name = "Test Java, Kotlin, and Swift Docker images on latest version"
 
 on = new On {
@@ -79,7 +14,7 @@ on = new On {
 
 jobs = new Mapping {
     for (platform in base.PLATFORMS) {
-        ["test-\(platform)"] = testPlatform(platform)
+        ["test-\(platform)"] = base.testPlatform(platform, "${{ env.PKL_VERSION }}")
     }
 }.toMap().filter((k,v) -> v != null).toMapping()
 

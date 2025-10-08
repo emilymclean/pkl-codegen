@@ -159,3 +159,103 @@ function renderForPlatform(platform: Platform, version: String): Listing<Step> =
         }
     else null
 }.toList().filterNonNull().toListing()
+
+local function testString(platform: String, extraFiles: List<String>): String = """
+# Test using new style explicitly listing -o
+docker run --rm -v "./test-data/:/data" test/\(platform):latest /data/example.pkl \(if(extraFiles.length > 0) extraFiles.join(" ") else "") -o /data/newstyle-out
+# Test using new style explicitly listing --output-dir
+docker run --rm -v "./test-data/:/data" test/\(platform):latest /data/example.pkl \(if(extraFiles.length > 0) extraFiles.join(" ") else "") --output-dir /data/newstyle-full-out
+# Test using old style without -o
+docker run --rm -v "./test-data/:/data" test/\(platform):latest /data/example.pkl \(if(extraFiles.length > 0) extraFiles.join(" ") else "") /data/oldstyle-out
+
+ls test-data
+echo "Output folder contents:"
+ls test-data/newstyle-out
+echo "Output Full folder contents:"
+ls test-data/newstyle-full-out
+"""
+
+function testPlatform(platform: String, version: String): Job = new Job {
+    steps = new Listing {
+        checkout
+        currentVersion
+        ...renderForPlatform(platform, version)
+        ...dockerSetup()
+        ...dockerBuild(
+            new Mapping {
+                ["context"] = platform
+                ["platforms"] = "linux/amd64"
+                ["load"] = true
+                ["tags"] = """
+                test/\(platform):latest
+                """
+            },
+            null
+        )
+        ...new Listing {
+            if (platform == PLATFORM_PKLDOC)
+                new CommandStep {
+                    run = testString(platform, List("\"/data/example space.pkl\"", "/data/doc-package-info.pkl"))
+                }
+            else if (platform == PLATFORM_JAVA) 
+                new CommandStep {
+                    run = testString(platform, List("--generate-getters", "/data/test.pkl"))
+                }
+            else if (platform == PLATFORM_GO)
+                new CommandStep {
+                    run = """
+                    docker run --rm -v "./test-data/:/data" test/\(platform):latest /data/example.pkl --mapping example=github.com/emilymclean/pkl-codegen/example --output-path /data/newstyle-out
+
+                    echo "Output folder contents:"
+                    ls test-data/newstyle-out
+                    """
+                }
+            else
+                new CommandStep {
+                    run = testString(platform, List("\"/data/example space.pkl\""))
+                }
+            new ActionStep {
+                uses = "actions/upload-artifact@v4"
+                with = new Mapping {
+                    ["name"] = "\(platform)-output"
+                    ["path"] = "test-data/newstyle-out/"
+                }
+            }
+        }
+    }
+}
+
+// Would love to have this as a matrix but that is annoying to read
+function wasUpdated(dir: String): Job = new Job {
+    outputs = new Mapping {
+        ["any-changed"] = "${{ env.any_changed }}"
+    }
+    steps = new Listing {
+        checkout
+        new CommandStep {
+            run = """
+            if git diff --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(\(dir)/.*|templates/entrypoint.template.sh|pkl-versions)'; then
+                echo "any_changed=true" >> "$GITHUB_ENV"
+            else
+                echo "any_changed=false" >> "$GITHUB_ENV"
+            fi
+            """
+        }
+    }
+}
+
+hidden pklVersionsJob = new Job {
+    outputs = new Mapping {
+        ["versions"] = "${{ env.versions }}"
+    }
+    steps = new Listing {
+        checkout
+        new CommandStep {
+            run = """
+            mapfile -t pklversions < "pkl-versions"
+            json=$(jq -n -c --argjson arr "$(printf '%s\n' "${pklversions[@]}" | jq -R . | jq -s .)" '{"version": $arr}')
+            echo "versions=$(echo "$json")" >> ${GITHUB_ENV}
+            """
+        }
+    }
+}
