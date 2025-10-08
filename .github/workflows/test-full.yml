@@ -32,7 +32,7 @@ jobs:
       with:
         fetch-depth: 0
     - run: |-
-        if git diff --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(java/.*|templates/entrypoint.template.sh|pkl-versions|.github/workflows)'; then
+        if git diff --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(java/.*|templates/entrypoint.template.sh|pkl-versions)'; then
             echo "any_changed=true" >> "$GITHUB_ENV"
         else
             echo "any_changed=false" >> "$GITHUB_ENV"
@@ -46,7 +46,7 @@ jobs:
       with:
         fetch-depth: 0
     - run: |-
-        if git diff --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(kotlin/.*|templates/entrypoint.template.sh|pkl-versions|.github/workflows)'; then
+        if git diff --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(kotlin/.*|templates/entrypoint.template.sh|pkl-versions)'; then
             echo "any_changed=true" >> "$GITHUB_ENV"
         else
             echo "any_changed=false" >> "$GITHUB_ENV"
@@ -60,7 +60,7 @@ jobs:
       with:
         fetch-depth: 0
     - run: |-
-        if git diff --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(doc/.*|templates/entrypoint.template.sh|pkl-versions|.github/workflows)'; then
+        if git diff --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(doc/.*|templates/entrypoint.template.sh|pkl-versions)'; then
             echo "any_changed=true" >> "$GITHUB_ENV"
         else
             echo "any_changed=false" >> "$GITHUB_ENV"
@@ -74,7 +74,7 @@ jobs:
       with:
         fetch-depth: 0
     - run: |-
-        if git diff --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(swift/.*|templates/entrypoint.template.sh|pkl-versions|.github/workflows)'; then
+        if git diff --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(swift/.*|templates/entrypoint.template.sh|pkl-versions)'; then
             echo "any_changed=true" >> "$GITHUB_ENV"
         else
             echo "any_changed=false" >> "$GITHUB_ENV"
@@ -88,7 +88,7 @@ jobs:
       with:
         fetch-depth: 0
     - run: |-
-        if git diff --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(go/.*|templates/entrypoint.template.sh|pkl-versions|.github/workflows)'; then
+        if git diff --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(go/.*|templates/entrypoint.template.sh|pkl-versions)'; then
             echo "any_changed=true" >> "$GITHUB_ENV"
         else
             echo "any_changed=false" >> "$GITHUB_ENV"
