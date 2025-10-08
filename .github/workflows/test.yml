@@ -61,7 +61,7 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: Build Docker image
-      run: docker buildx build java --build-arg ${{ env.BUILD_ARGS }} -t test/java:latest --load
+      run: docker buildx build java/ --build-arg ${{ env.BUILD_ARGS }} -t test/java:latest --load
     - name: Generate and test
       run: |-
         set -e
@@ -130,7 +130,7 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: Build Docker image
-      run: docker buildx build kotlin --build-arg ${{ env.BUILD_ARGS }} -t test/kotlin:latest --load
+      run: docker buildx build kotlin/ --build-arg ${{ env.BUILD_ARGS }} -t test/kotlin:latest --load
     - name: Generate and test
       run: |-
         set -e
@@ -199,7 +199,7 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: Build Docker image
-      run: docker buildx build doc --build-arg ${{ env.BUILD_ARGS }} -t test/doc:latest --load
+      run: docker buildx build doc/ --build-arg ${{ env.BUILD_ARGS }} -t test/doc:latest --load
     - name: Generate and test
       run: |-
         set -e
@@ -294,7 +294,7 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: Build Docker image
-      run: docker buildx build swift --build-arg ${{ env.BUILD_ARGS }} -t test/swift:latest --load
+      run: docker buildx build swift/ --build-arg ${{ env.BUILD_ARGS }} -t test/swift:latest --load
     - name: Generate and test
       run: |-
         set -e
@@ -375,7 +375,7 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: Build Docker image
-      run: docker buildx build go --build-arg ${{ env.BUILD_ARGS }} -t test/go:latest --load
+      run: docker buildx build go/ --build-arg ${{ env.BUILD_ARGS }} -t test/go:latest --load
     - name: Generate and test
       run: |-
         docker run --rm -v "./test-data/:/data" test/go:latest /data/example.pkl --mapping example=github.com/emilymclean/pkl-codegen/example --output-path /data/newstyle-out

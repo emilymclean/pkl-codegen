@@ -212,7 +212,7 @@ function testPlatform(platform: String, version: String, upload: Boolean): Job =
         ...dockerSetup()
         new CommandStep {
             name = "Build Docker image"
-            run = "docker buildx build \(platform) --build-arg ${{ env.BUILD_ARGS }} -t test/\(platform):latest --load"
+            run = "docker buildx build \(platform)/ --build-arg ${{ env.BUILD_ARGS }} -t test/\(platform):latest --load"
         }
         ...new Listing {
             if (platform == PLATFORM_PKLDOC)
