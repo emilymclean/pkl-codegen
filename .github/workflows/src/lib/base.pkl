@@ -225,14 +225,17 @@ function testPlatform(platform: String, version: String, upload: Boolean): Job =
         ...new Listing {
             if (platform == PLATFORM_PKLDOC)
                 new CommandStep {
+                    name = "Generate and test"
                     run = testString(platform, List("\"/data/example space.pkl\"", "/data/doc-package-info.pkl"))
                 }
             else if (platform == PLATFORM_JAVA) 
                 new CommandStep {
+                    name = "Generate and test"
                     run = testString(platform, List("--generate-getters", "/data/test.pkl"))
                 }
             else if (platform == PLATFORM_GO)
                 new CommandStep {
+                    name = "Generate and test"
                     run = """
                     docker run --rm -v "./test-data/:/data" test/\(platform):latest /data/example.pkl --mapping example=github.com/emilymclean/pkl-codegen/example --output-path /data/newstyle-out
 
@@ -242,9 +245,11 @@ function testPlatform(platform: String, version: String, upload: Boolean): Job =
                 }
             else
                 new CommandStep {
+                    name = "Generate and test"
                     run = testString(platform, List("\"/data/example space.pkl\""))
                 }
             new CommandStep {
+                name = "Test if any output"
                 run = """
                 set -f
                 OUTPUT=$(ls -A "test-data/newstyle-out")

@@ -51,7 +51,8 @@ jobs:
         load: true
         tags: test/java:latest
         build-args: ${{ env.BUILD_ARGS }}
-    - run: |-
+    - name: Generate and test
+      run: |-
         set -e
         # Test using new style explicitly listing -o
         docker run --rm -v "./test-data/:/data" test/java:latest /data/example.pkl --generate-getters /data/test.pkl -o /data/newstyle-out
@@ -65,7 +66,8 @@ jobs:
         ls test-data/newstyle-out
         echo "Output Full folder contents:"
         ls test-data/newstyle-full-out
-    - run: |-
+    - name: Test if any output
+      run: |-
         set -f
         OUTPUT=$(ls -A "test-data/newstyle-out")
         set +f
@@ -124,7 +126,8 @@ jobs:
         load: true
         tags: test/kotlin:latest
         build-args: ${{ env.BUILD_ARGS }}
-    - run: |-
+    - name: Generate and test
+      run: |-
         set -e
         # Test using new style explicitly listing -o
         docker run --rm -v "./test-data/:/data" test/kotlin:latest /data/example.pkl "/data/example space.pkl" -o /data/newstyle-out
@@ -138,7 +141,8 @@ jobs:
         ls test-data/newstyle-out
         echo "Output Full folder contents:"
         ls test-data/newstyle-full-out
-    - run: |-
+    - name: Test if any output
+      run: |-
         set -f
         OUTPUT=$(ls -A "test-data/newstyle-out")
         set +f
@@ -197,7 +201,8 @@ jobs:
         load: true
         tags: test/doc:latest
         build-args: ${{ env.BUILD_ARGS }}
-    - run: |-
+    - name: Generate and test
+      run: |-
         set -e
         # Test using new style explicitly listing -o
         docker run --rm -v "./test-data/:/data" test/doc:latest /data/example.pkl "/data/example space.pkl" /data/doc-package-info.pkl -o /data/newstyle-out
@@ -211,7 +216,8 @@ jobs:
         ls test-data/newstyle-out
         echo "Output Full folder contents:"
         ls test-data/newstyle-full-out
-    - run: |-
+    - name: Test if any output
+      run: |-
         set -f
         OUTPUT=$(ls -A "test-data/newstyle-out")
         set +f
@@ -296,7 +302,8 @@ jobs:
         load: true
         tags: test/swift:latest
         build-args: ${{ env.BUILD_ARGS }}
-    - run: |-
+    - name: Generate and test
+      run: |-
         set -e
         # Test using new style explicitly listing -o
         docker run --rm -v "./test-data/:/data" test/swift:latest /data/example.pkl "/data/example space.pkl" -o /data/newstyle-out
@@ -310,7 +317,8 @@ jobs:
         ls test-data/newstyle-out
         echo "Output Full folder contents:"
         ls test-data/newstyle-full-out
-    - run: |-
+    - name: Test if any output
+      run: |-
         set -f
         OUTPUT=$(ls -A "test-data/newstyle-out")
         set +f
@@ -381,12 +389,14 @@ jobs:
         load: true
         tags: test/go:latest
         build-args: ${{ env.BUILD_ARGS }}
-    - run: |-
+    - name: Generate and test
+      run: |-
         docker run --rm -v "./test-data/:/data" test/go:latest /data/example.pkl --mapping example=github.com/emilymclean/pkl-codegen/example --output-path /data/newstyle-out
 
         echo "Output folder contents:"
         ls test-data/newstyle-out
-    - run: |-
+    - name: Test if any output
+      run: |-
         set -f
         OUTPUT=$(ls -A "test-data/newstyle-out")
         set +f
