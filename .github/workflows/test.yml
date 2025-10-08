@@ -60,14 +60,8 @@ jobs:
         registry: https://ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v6
-      with:
-        context: java
-        platforms: linux/amd64
-        load: true
-        tags: test/java:latest
-        build-args: ${{ env.BUILD_ARGS }}
+    - name: Build Docker image
+      run: docker buildx build java --build-arg ${{ env.BUILD_ARGS }} -t test/java:latest --load
     - name: Generate and test
       run: |-
         set -e
@@ -135,14 +129,8 @@ jobs:
         registry: https://ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v6
-      with:
-        context: kotlin
-        platforms: linux/amd64
-        load: true
-        tags: test/kotlin:latest
-        build-args: ${{ env.BUILD_ARGS }}
+    - name: Build Docker image
+      run: docker buildx build kotlin --build-arg ${{ env.BUILD_ARGS }} -t test/kotlin:latest --load
     - name: Generate and test
       run: |-
         set -e
@@ -210,14 +198,8 @@ jobs:
         registry: https://ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v6
-      with:
-        context: doc
-        platforms: linux/amd64
-        load: true
-        tags: test/doc:latest
-        build-args: ${{ env.BUILD_ARGS }}
+    - name: Build Docker image
+      run: docker buildx build doc --build-arg ${{ env.BUILD_ARGS }} -t test/doc:latest --load
     - name: Generate and test
       run: |-
         set -e
@@ -311,14 +293,8 @@ jobs:
         registry: https://ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v6
-      with:
-        context: swift
-        platforms: linux/amd64
-        load: true
-        tags: test/swift:latest
-        build-args: ${{ env.BUILD_ARGS }}
+    - name: Build Docker image
+      run: docker buildx build swift --build-arg ${{ env.BUILD_ARGS }} -t test/swift:latest --load
     - name: Generate and test
       run: |-
         set -e
@@ -398,14 +374,8 @@ jobs:
         registry: https://ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v6
-      with:
-        context: go
-        platforms: linux/amd64
-        load: true
-        tags: test/go:latest
-        build-args: ${{ env.BUILD_ARGS }}
+    - name: Build Docker image
+      run: docker buildx build go --build-arg ${{ env.BUILD_ARGS }} -t test/go:latest --load
     - name: Generate and test
       run: |-
         docker run --rm -v "./test-data/:/data" test/go:latest /data/example.pkl --mapping example=github.com/emilymclean/pkl-codegen/example --output-path /data/newstyle-out

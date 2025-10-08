@@ -210,18 +210,10 @@ function testPlatform(platform: String, version: String, upload: Boolean): Job =
         ...renderForPlatform(platform, version)
         ...buildArgsForPlatform(platform, version)
         ...dockerSetup()
-        ...dockerBuild(
-            new Mapping {
-                ["context"] = platform
-                ["platforms"] = "linux/amd64"
-                ["load"] = true
-                ["tags"] = """
-                test/\(platform):latest
-                """
-                ["build-args"] = "${{ env.BUILD_ARGS }}"
-            },
-            null
-        )
+        new CommandStep {
+            name = "Build Docker image"
+            run = "docker buildx build \(platform) --build-arg ${{ env.BUILD_ARGS }} -t test/\(platform):latest --load"
+        }
         ...new Listing {
             if (platform == PLATFORM_PKLDOC)
                 new CommandStep {
