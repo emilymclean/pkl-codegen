@@ -13,25 +13,6 @@ local dockerPermissions = new Mapping {
     ["packages"] = "write"
 }
 
-// Would love to have this as a matrix but that is annoying to read
-local function wasUpdated(dir: String): Job = new Job {
-    outputs = new Mapping {
-        ["any-changed"] = "${{ env.any_changed }}"
-    }
-    steps = new Listing {
-        base.checkout
-        new CommandStep {
-            run = """
-            if git diff --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(\(dir)/.*|templates/entrypoint.template.sh|pkl-versions)'; then
-                echo "any_changed=true" >> "$GITHUB_ENV"
-            else
-                echo "any_changed=false" >> "$GITHUB_ENV"
-            fi
-            """
-        }
-    }
-}
-
 local function buildJob(dir: String): Job = new Job {
     needs = new Listing {
         "version"
@@ -52,6 +33,7 @@ local function buildJob(dir: String): Job = new Job {
 
 local function docker(dir: String): Listing =
     new Listing {
+        ...base.buildArgsForPlatform(dir, "${{ matrix.version }}")
         new CommandStep {
             name = "Lowercase repository name"
             run = """
@@ -74,6 +56,7 @@ local function docker(dir: String): Listing =
                 ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.version }}
                 ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.major }}
                 """
+                ["build-args"] = "${{ env.BUILD_ARGS }}"
             },
             "github.ref == 'refs/heads/main'"
         )
@@ -87,6 +70,7 @@ local function docker(dir: String): Listing =
                 ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
                 ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.version }}
                 """
+                ["build-args"] = "${{ env.BUILD_ARGS }}"
             },
             "github.ref != 'refs/heads/main'"
         )
@@ -171,23 +155,9 @@ jobs = new Mapping {
             }
         }
     }
-    ["pkl-versions"] = new Job {
-        outputs = new Mapping {
-            ["versions"] = "${{ env.versions }}"
-        }
-        steps = new Listing {
-            base.checkout
-            new CommandStep {
-                run = """
-                mapfile -t pklversions < "pkl-versions"
-                json=$(jq -n -c --argjson arr "$(printf '%s\n' "${pklversions[@]}" | jq -R . | jq -s .)" '{"version": $arr}')
-                echo "versions=$(echo "$json")" >> ${GITHUB_ENV}
-                """
-            }
-        }
-    }
+    ["pkl-versions"] = base.pklVersionsJob
     for (platform in base.PLATFORMS) {
-        ["was-updated-\(platform)"] = wasUpdated(platform)
+        ["was-updated-\(platform)"] = base.wasUpdated(platform)
     }
     for (platform in base.PLATFORMS) {
         ["build-\(platform)"] = buildJob(platform)

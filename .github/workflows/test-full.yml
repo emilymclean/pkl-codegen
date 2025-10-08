@@ -1,9 +1,10 @@
-name: Test Java, Kotlin, and Swift Docker images on latest version
+name: Test Java, Kotlin, and Swift Docker images on all versions
 'on':
-  pull_request:
+  push:
     branches:
     - main
     - develop
+  workflow_dispatch: {}
 jobs:
   pkl-versions:
     runs-on: ubuntu-latest
@@ -16,11 +17,83 @@ jobs:
     - run: |-
         mapfile -t pklversions < "pkl-versions"
         json=$(jq -n -c --argjson arr "$(printf '%s
-        ' "${pklversions[@]}" | jq -R . | jq -s '[.[0], .[-1]]')" '{"version": $arr}')
+        ' "${pklversions[@]}" | jq -R . | jq -s .)" '{"version": $arr}')
         echo "versions=$(echo "$json")" >> ${GITHUB_ENV}
+  was-updated-java:
+    runs-on: ubuntu-latest
+    outputs:
+      any-changed: ${{ env.any_changed }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - run: |-
+        if git diff --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(java/.*|templates/entrypoint.template.sh|pkl-versions)'; then
+            echo "any_changed=true" >> "$GITHUB_ENV"
+        else
+            echo "any_changed=false" >> "$GITHUB_ENV"
+        fi
+  was-updated-kotlin:
+    runs-on: ubuntu-latest
+    outputs:
+      any-changed: ${{ env.any_changed }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - run: |-
+        if git diff --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(kotlin/.*|templates/entrypoint.template.sh|pkl-versions)'; then
+            echo "any_changed=true" >> "$GITHUB_ENV"
+        else
+            echo "any_changed=false" >> "$GITHUB_ENV"
+        fi
+  was-updated-doc:
+    runs-on: ubuntu-latest
+    outputs:
+      any-changed: ${{ env.any_changed }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - run: |-
+        if git diff --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(doc/.*|templates/entrypoint.template.sh|pkl-versions)'; then
+            echo "any_changed=true" >> "$GITHUB_ENV"
+        else
+            echo "any_changed=false" >> "$GITHUB_ENV"
+        fi
+  was-updated-swift:
+    runs-on: ubuntu-latest
+    outputs:
+      any-changed: ${{ env.any_changed }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - run: |-
+        if git diff --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(swift/.*|templates/entrypoint.template.sh|pkl-versions)'; then
+            echo "any_changed=true" >> "$GITHUB_ENV"
+        else
+            echo "any_changed=false" >> "$GITHUB_ENV"
+        fi
+  was-updated-go:
+    runs-on: ubuntu-latest
+    outputs:
+      any-changed: ${{ env.any_changed }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - run: |-
+        if git diff --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(go/.*|templates/entrypoint.template.sh|pkl-versions)'; then
+            echo "any_changed=true" >> "$GITHUB_ENV"
+        else
+            echo "any_changed=false" >> "$GITHUB_ENV"
+        fi
   test-java:
     needs:
     - pkl-versions
+    - was-updated-java
+    if: needs.was-updated-java.outputs.any-changed == 'true'
     runs-on: ubuntu-latest
     strategy:
       matrix: ${{fromJson(needs.pkl-versions.outputs.versions)}}
@@ -96,6 +169,8 @@ jobs:
   test-kotlin:
     needs:
     - pkl-versions
+    - was-updated-kotlin
+    if: needs.was-updated-kotlin.outputs.any-changed == 'true'
     runs-on: ubuntu-latest
     strategy:
       matrix: ${{fromJson(needs.pkl-versions.outputs.versions)}}
@@ -171,6 +246,8 @@ jobs:
   test-doc:
     needs:
     - pkl-versions
+    - was-updated-doc
+    if: needs.was-updated-doc.outputs.any-changed == 'true'
     runs-on: ubuntu-latest
     strategy:
       matrix: ${{fromJson(needs.pkl-versions.outputs.versions)}}
@@ -246,6 +323,8 @@ jobs:
   test-swift:
     needs:
     - pkl-versions
+    - was-updated-swift
+    if: needs.was-updated-swift.outputs.any-changed == 'true'
     runs-on: ubuntu-latest
     strategy:
       matrix: ${{fromJson(needs.pkl-versions.outputs.versions)}}
@@ -347,6 +426,8 @@ jobs:
   test-go:
     needs:
     - pkl-versions
+    - was-updated-go
+    if: needs.was-updated-go.outputs.any-changed == 'true'
     runs-on: ubuntu-latest
     strategy:
       matrix: ${{fromJson(needs.pkl-versions.outputs.versions)}}
