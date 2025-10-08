@@ -33,6 +33,7 @@ local function buildJob(dir: String): Job = new Job {
 
 local function docker(dir: String): Listing =
     new Listing {
+        ...base.buildArgsForPlatform(dir, "${{ matrix.version }}")
         new CommandStep {
             name = "Lowercase repository name"
             run = """
@@ -55,6 +56,7 @@ local function docker(dir: String): Listing =
                 ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.version }}
                 ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.major }}
                 """
+                ["build-args"] = "${{ env.BUILD_ARGS }}"
             },
             "github.ref == 'refs/heads/main'"
         )
@@ -68,6 +70,7 @@ local function docker(dir: String): Listing =
                 ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
                 ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.version }}
                 """
+                ["build-args"] = "${{ env.BUILD_ARGS }}"
             },
             "github.ref != 'refs/heads/main'"
         )

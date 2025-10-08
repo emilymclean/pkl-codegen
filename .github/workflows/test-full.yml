@@ -144,6 +144,7 @@ jobs:
         platforms: linux/amd64
         load: true
         tags: test/java:latest
+        build-args: ${{ env.BUILD_ARGS }}
     - run: |-
         set -e
         # Test using new style explicitly listing -o
@@ -218,6 +219,7 @@ jobs:
         platforms: linux/amd64
         load: true
         tags: test/kotlin:latest
+        build-args: ${{ env.BUILD_ARGS }}
     - run: |-
         set -e
         # Test using new style explicitly listing -o
@@ -292,6 +294,7 @@ jobs:
         platforms: linux/amd64
         load: true
         tags: test/doc:latest
+        build-args: ${{ env.BUILD_ARGS }}
     - run: |-
         set -e
         # Test using new style explicitly listing -o
@@ -363,6 +366,18 @@ jobs:
         engine: mustache
     - name: Make endpoint.sh executable
       run: chmod +x swift/entrypoint.sh
+    - name: Set swift image version
+      run: |-
+        verlte() {
+            [  "$1" = "`echo -e "$1
+        $2" | sort -V | head -n1`" ]
+        }
+
+        verlt() {
+            [ "$1" = "$2" ] && return 1 || verlte $1 $2
+        }
+
+        echo "BUILD_ARGS=$(verlt ${{ matrix.version }} 0.29.0 && echo "SWIFT_VERSION=5.10" || echo "SWIFT_VERSION=6.1.3")" >> $GITHUB_ENV
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v3
     - name: Setup Docker Buildx
@@ -380,6 +395,7 @@ jobs:
         platforms: linux/amd64
         load: true
         tags: test/swift:latest
+        build-args: ${{ env.BUILD_ARGS }}
     - run: |-
         set -e
         # Test using new style explicitly listing -o
@@ -466,6 +482,7 @@ jobs:
         platforms: linux/amd64
         load: true
         tags: test/go:latest
+        build-args: ${{ env.BUILD_ARGS }}
     - run: |-
         docker run --rm -v "./test-data/:/data" test/go:latest /data/example.pkl --mapping example=github.com/emilymclean/pkl-codegen/example --output-path /data/newstyle-out
 
