@@ -11,6 +11,12 @@ on = new On {
         }
     }
     workflow_dispatch = new WorkflowDispatch {}
+    push = new Push {
+        branches = new Listing {
+            "main"
+            "develop"
+        }
+    }
 }
 
 jobs = new Mapping {
@@ -19,7 +25,7 @@ jobs = new Mapping {
         ["was-updated-\(platform)"] = base.wasUpdated(platform)
     }
     for (platform in base.PLATFORMS) {
-        ["test-\(platform)"] = (base.testPlatform(platform, "${{ matrix.version }}")) {
+        ["test-\(platform)"] = (base.testPlatform(platform, "${{ matrix.version }}", false)) {
             needs = new Listing {
                 "pkl-versions"
                 "was-updated-\(platform)"

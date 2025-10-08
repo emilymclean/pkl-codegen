@@ -14,7 +14,7 @@ on = new On {
 
 jobs = new Mapping {
     for (platform in base.PLATFORMS) {
-        ["test-\(platform)"] = base.testPlatform(platform, "${{ env.PKL_VERSION }}")
+        ["test-\(platform)"] = base.testPlatform(platform, "${{ env.PKL_VERSION }}", true)
     }
 }.toMap().filter((k,v) -> v != null).toMapping()
 

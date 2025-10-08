@@ -4,6 +4,10 @@ name: Test Java, Kotlin, and Swift Docker images on all versions
     branches:
     - main
     - develop
+  push:
+    branches:
+    - main
+    - develop
   workflow_dispatch: {}
 jobs:
   pkl-versions:
@@ -141,6 +145,7 @@ jobs:
         load: true
         tags: test/java:latest
     - run: |-
+        set -e
         # Test using new style explicitly listing -o
         docker run --rm -v "./test-data/:/data" test/java:latest /data/example.pkl --generate-getters /data/test.pkl -o /data/newstyle-out
         # Test using new style explicitly listing --output-dir
@@ -153,10 +158,6 @@ jobs:
         ls test-data/newstyle-out
         echo "Output Full folder contents:"
         ls test-data/newstyle-full-out
-    - uses: actions/upload-artifact@v4
-      with:
-        name: java-output
-        path: test-data/newstyle-out/
   test-kotlin:
     needs:
     - pkl-versions
@@ -209,6 +210,7 @@ jobs:
         load: true
         tags: test/kotlin:latest
     - run: |-
+        set -e
         # Test using new style explicitly listing -o
         docker run --rm -v "./test-data/:/data" test/kotlin:latest /data/example.pkl "/data/example space.pkl" -o /data/newstyle-out
         # Test using new style explicitly listing --output-dir
@@ -221,10 +223,6 @@ jobs:
         ls test-data/newstyle-out
         echo "Output Full folder contents:"
         ls test-data/newstyle-full-out
-    - uses: actions/upload-artifact@v4
-      with:
-        name: kotlin-output
-        path: test-data/newstyle-out/
   test-doc:
     needs:
     - pkl-versions
@@ -277,6 +275,7 @@ jobs:
         load: true
         tags: test/doc:latest
     - run: |-
+        set -e
         # Test using new style explicitly listing -o
         docker run --rm -v "./test-data/:/data" test/doc:latest /data/example.pkl "/data/example space.pkl" /data/doc-package-info.pkl -o /data/newstyle-out
         # Test using new style explicitly listing --output-dir
@@ -289,10 +288,6 @@ jobs:
         ls test-data/newstyle-out
         echo "Output Full folder contents:"
         ls test-data/newstyle-full-out
-    - uses: actions/upload-artifact@v4
-      with:
-        name: doc-output
-        path: test-data/newstyle-out/
   test-swift:
     needs:
     - pkl-versions
@@ -349,6 +344,7 @@ jobs:
         load: true
         tags: test/swift:latest
     - run: |-
+        set -e
         # Test using new style explicitly listing -o
         docker run --rm -v "./test-data/:/data" test/swift:latest /data/example.pkl "/data/example space.pkl" -o /data/newstyle-out
         # Test using new style explicitly listing --output-dir
@@ -361,10 +357,6 @@ jobs:
         ls test-data/newstyle-out
         echo "Output Full folder contents:"
         ls test-data/newstyle-full-out
-    - uses: actions/upload-artifact@v4
-      with:
-        name: swift-output
-        path: test-data/newstyle-out/
   test-go:
     needs:
     - pkl-versions
@@ -423,7 +415,3 @@ jobs:
 
         echo "Output folder contents:"
         ls test-data/newstyle-out
-    - uses: actions/upload-artifact@v4
-      with:
-        name: go-output
-        path: test-data/newstyle-out/

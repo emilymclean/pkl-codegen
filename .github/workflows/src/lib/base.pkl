@@ -161,6 +161,7 @@ function renderForPlatform(platform: Platform, version: String): Listing<Step> =
 }.toList().filterNonNull().toListing()
 
 local function testString(platform: String, extraFiles: List<String>): String = """
+set -e
 # Test using new style explicitly listing -o
 docker run --rm -v "./test-data/:/data" test/\(platform):latest /data/example.pkl \(if(extraFiles.length > 0) extraFiles.join(" ") else "") -o /data/newstyle-out
 # Test using new style explicitly listing --output-dir
@@ -175,7 +176,7 @@ echo "Output Full folder contents:"
 ls test-data/newstyle-full-out
 """
 
-function testPlatform(platform: String, version: String): Job = new Job {
+function testPlatform(platform: String, version: String, upload: Boolean): Job = new Job {
     steps = new Listing {
         checkout
         currentVersion
@@ -214,13 +215,19 @@ function testPlatform(platform: String, version: String): Job = new Job {
                 new CommandStep {
                     run = testString(platform, List("\"/data/example space.pkl\""))
                 }
-            new ActionStep {
-                uses = "actions/upload-artifact@v4"
-                with = new Mapping {
-                    ["name"] = "\(platform)-output"
-                    ["path"] = "test-data/newstyle-out/"
-                }
-            }
+            ...(
+                if (upload) 
+                    new Listing {
+                        new ActionStep {
+                            uses = "actions/upload-artifact@v4"
+                            with = new Mapping {
+                                ["name"] = "\(platform)-output"
+                                ["path"] = "test-data/newstyle-out/"
+                            }
+                        }
+                    }
+                else new Listing {}
+            )
         }
     }
 }
