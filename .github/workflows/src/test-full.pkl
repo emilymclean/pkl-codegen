@@ -4,12 +4,6 @@ import "lib/base.pkl"
 name = "Test Java, Kotlin, and Swift Docker images on all versions"
 
 on = new On {
-    pull_request = new PullRequest {
-        branches = new Listing {
-            "main"
-            "develop"
-        }
-    }
     workflow_dispatch = new WorkflowDispatch {}
     push = new Push {
         branches = new Listing {

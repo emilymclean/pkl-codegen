@@ -1,9 +1,5 @@
 name: Test Java, Kotlin, and Swift Docker images on all versions
 'on':
-  pull_request:
-    branches:
-    - main
-    - develop
   push:
     branches:
     - main

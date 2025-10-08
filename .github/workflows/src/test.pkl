@@ -13,8 +13,30 @@ on = new On {
 }
 
 jobs = new Mapping {
+    ["pkl-versions"] = new Job {
+        outputs = new Mapping {
+            ["versions"] = "${{ env.versions }}"
+        }
+        steps = new Listing {
+            base.checkout
+            new CommandStep {
+                run = """
+                mapfile -t pklversions < "pkl-versions"
+                json=$(jq -n -c --argjson arr "$(printf '%s\n' "${pklversions[@]}" | jq -R . | jq -s '[.[0], .[-1]]')" '{"version": $arr}')
+                echo "versions=$(echo "$json")" >> ${GITHUB_ENV}
+                """
+            }
+        }
+    }
     for (platform in base.PLATFORMS) {
-        ["test-\(platform)"] = base.testPlatform(platform, "${{ env.PKL_VERSION }}", true)
+        ["test-\(platform)"] = (base.testPlatform(platform, "${{ matrix.version }}", false)) {
+            needs = new Listing {
+                "pkl-versions"
+            }
+            strategy = new JobStrategy {
+                matrix = "${{fromJson(needs.pkl-versions.outputs.versions)}}"
+            }
+        }
     }
 }.toMap().filter((k,v) -> v != null).toMapping()
 
