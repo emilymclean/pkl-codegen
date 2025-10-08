@@ -8,6 +8,16 @@ hidden const PLATFORM_PKLDOC = "doc"
 hidden const PLATFORM_GO = "go"
 
 hidden const RENDER_TEMPLATE_ACTION = "emilymclean/template-render-action@v1.0.2"
+// https://stackoverflow.com/questions/4023830/how-to-compare-two-strings-in-dot-separated-version-format-in-bash
+hidden const VERLTE = """
+verlte() {
+    [  "$1" = "`echo -e "$1\n$2" | sort -V | head -n1`" ]
+}
+
+verlt() {
+    [ "$1" = "$2" ] && return 1 || verlte $1 $2
+}
+"""
 
 typealias Platform = "java"|"kotlin"|"swift"|"doc"|"go"
 
@@ -78,7 +88,9 @@ function renderForPlatform(platform: Platform, version: String): Listing<Step> =
         new CommandStep {
             name = "Read swift-tool-version"
             run = """
-            echo "swift_tool_version=$(cat swift/swift-tool-version)" >> $GITHUB_ENV
+            \(VERLTE)
+
+            echo "swift_tool_version=$(verlt \(version) 0.29.0 && echo "0.4.2" || cat swift/swift-tool-version)" >> $GITHUB_ENV
             """
         }
     else null
@@ -86,7 +98,9 @@ function renderForPlatform(platform: Platform, version: String): Listing<Step> =
         new CommandStep {
             name = "Read go-tool-version"
             run = """
-            echo "go_tool_version=$(cat go/go-tool-version)" >> $GITHUB_ENV
+            \(VERLTE)
+
+            echo "go_tool_version=$(verlt \(version) 0.29.0 && echo "0.10.0" || cat go/go-tool-version)" >> $GITHUB_ENV
             """
         }
     else null

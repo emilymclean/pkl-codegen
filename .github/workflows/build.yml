@@ -371,7 +371,17 @@ jobs:
       with:
         fetch-depth: 0
     - name: Read swift-tool-version
-      run: echo "swift_tool_version=$(cat swift/swift-tool-version)" >> $GITHUB_ENV
+      run: |-
+        verlte() {
+            [  "$1" = "`echo -e "$1
+        $2" | sort -V | head -n1`" ]
+        }
+
+        verlt() {
+            [ "$1" = "$2" ] && return 1 || verlte $1 $2
+        }
+
+        echo "swift_tool_version=$(verlt ${{ matrix.version }} 0.29.0 && echo "0.4.2" || cat swift/swift-tool-version)" >> $GITHUB_ENV
     - name: Render setup.template.sh
       env:
         pkl_version: ${{ matrix.version }}
@@ -447,7 +457,17 @@ jobs:
       with:
         fetch-depth: 0
     - name: Read go-tool-version
-      run: echo "go_tool_version=$(cat go/go-tool-version)" >> $GITHUB_ENV
+      run: |-
+        verlte() {
+            [  "$1" = "`echo -e "$1
+        $2" | sort -V | head -n1`" ]
+        }
+
+        verlt() {
+            [ "$1" = "$2" ] && return 1 || verlte $1 $2
+        }
+
+        echo "go_tool_version=$(verlt ${{ matrix.version }} 0.29.0 && echo "0.10.0" || cat go/go-tool-version)" >> $GITHUB_ENV
     - name: Render template.Dockerfile
       env:
         pkl_version: ${{ matrix.version }}
