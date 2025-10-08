@@ -64,6 +64,15 @@ jobs:
         ls test-data/newstyle-out
         echo "Output Full folder contents:"
         ls test-data/newstyle-full-out
+    - run: |-
+        set -f
+        OUTPUT=$(ls -A "test-data/newstyle-out")
+        set +f
+
+        if [ -z "$OUTPUT" ]; then
+            echo "No output in newstyle-out, failing"
+            exit 1
+        fi
     - uses: actions/upload-artifact@v4
       with:
         name: java-output
@@ -127,6 +136,15 @@ jobs:
         ls test-data/newstyle-out
         echo "Output Full folder contents:"
         ls test-data/newstyle-full-out
+    - run: |-
+        set -f
+        OUTPUT=$(ls -A "test-data/newstyle-out")
+        set +f
+
+        if [ -z "$OUTPUT" ]; then
+            echo "No output in newstyle-out, failing"
+            exit 1
+        fi
     - uses: actions/upload-artifact@v4
       with:
         name: kotlin-output
@@ -190,6 +208,15 @@ jobs:
         ls test-data/newstyle-out
         echo "Output Full folder contents:"
         ls test-data/newstyle-full-out
+    - run: |-
+        set -f
+        OUTPUT=$(ls -A "test-data/newstyle-out")
+        set +f
+
+        if [ -z "$OUTPUT" ]; then
+            echo "No output in newstyle-out, failing"
+            exit 1
+        fi
     - uses: actions/upload-artifact@v4
       with:
         name: doc-output
@@ -257,6 +284,15 @@ jobs:
         ls test-data/newstyle-out
         echo "Output Full folder contents:"
         ls test-data/newstyle-full-out
+    - run: |-
+        set -f
+        OUTPUT=$(ls -A "test-data/newstyle-out")
+        set +f
+
+        if [ -z "$OUTPUT" ]; then
+            echo "No output in newstyle-out, failing"
+            exit 1
+        fi
     - uses: actions/upload-artifact@v4
       with:
         name: swift-output
@@ -313,6 +349,15 @@ jobs:
 
         echo "Output folder contents:"
         ls test-data/newstyle-out
+    - run: |-
+        set -f
+        OUTPUT=$(ls -A "test-data/newstyle-out")
+        set +f
+
+        if [ -z "$OUTPUT" ]; then
+            echo "No output in newstyle-out, failing"
+            exit 1
+        fi
     - uses: actions/upload-artifact@v4
       with:
         name: go-output

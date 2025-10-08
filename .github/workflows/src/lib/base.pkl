@@ -215,6 +215,18 @@ function testPlatform(platform: String, version: String, upload: Boolean): Job =
                 new CommandStep {
                     run = testString(platform, List("\"/data/example space.pkl\""))
                 }
+            new CommandStep {
+                run = """
+                set -f
+                OUTPUT=$(ls -A "test-data/newstyle-out")
+                set +f
+
+                if [ -z "$OUTPUT" ]; then
+                    echo "No output in newstyle-out, failing"
+                    exit 1
+                fi
+                """
+            }
             ...(
                 if (upload) 
                     new Listing {

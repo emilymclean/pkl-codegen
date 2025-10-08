@@ -158,6 +158,15 @@ jobs:
         ls test-data/newstyle-out
         echo "Output Full folder contents:"
         ls test-data/newstyle-full-out
+    - run: |-
+        set -f
+        OUTPUT=$(ls -A "test-data/newstyle-out")
+        set +f
+
+        if [ -z "$OUTPUT" ]; then
+            echo "No output in newstyle-out, failing"
+            exit 1
+        fi
   test-kotlin:
     needs:
     - pkl-versions
@@ -223,6 +232,15 @@ jobs:
         ls test-data/newstyle-out
         echo "Output Full folder contents:"
         ls test-data/newstyle-full-out
+    - run: |-
+        set -f
+        OUTPUT=$(ls -A "test-data/newstyle-out")
+        set +f
+
+        if [ -z "$OUTPUT" ]; then
+            echo "No output in newstyle-out, failing"
+            exit 1
+        fi
   test-doc:
     needs:
     - pkl-versions
@@ -288,6 +306,15 @@ jobs:
         ls test-data/newstyle-out
         echo "Output Full folder contents:"
         ls test-data/newstyle-full-out
+    - run: |-
+        set -f
+        OUTPUT=$(ls -A "test-data/newstyle-out")
+        set +f
+
+        if [ -z "$OUTPUT" ]; then
+            echo "No output in newstyle-out, failing"
+            exit 1
+        fi
   test-swift:
     needs:
     - pkl-versions
@@ -357,6 +384,15 @@ jobs:
         ls test-data/newstyle-out
         echo "Output Full folder contents:"
         ls test-data/newstyle-full-out
+    - run: |-
+        set -f
+        OUTPUT=$(ls -A "test-data/newstyle-out")
+        set +f
+
+        if [ -z "$OUTPUT" ]; then
+            echo "No output in newstyle-out, failing"
+            exit 1
+        fi
   test-go:
     needs:
     - pkl-versions
@@ -415,3 +451,12 @@ jobs:
 
         echo "Output folder contents:"
         ls test-data/newstyle-out
+    - run: |-
+        set -f
+        OUTPUT=$(ls -A "test-data/newstyle-out")
+        set +f
+
+        if [ -z "$OUTPUT" ]; then
+            echo "No output in newstyle-out, failing"
+            exit 1
+        fi
