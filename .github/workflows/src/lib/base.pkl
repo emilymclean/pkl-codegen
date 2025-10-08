@@ -234,7 +234,7 @@ function wasUpdated(dir: String): Job = new Job {
         checkout
         new CommandStep {
             run = """
-            if git diff --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(\(dir)/.*|templates/entrypoint.template.sh|pkl-versions)'; then
+            if git diff --no-commit-id --name-only HEAD HEAD~1 | grep -Eq '(\(dir)/.*|templates/entrypoint.template.sh|pkl-versions|.github/workflows)'; then
                 echo "any_changed=true" >> "$GITHUB_ENV"
             else
                 echo "any_changed=false" >> "$GITHUB_ENV"
