@@ -44,6 +44,13 @@ local function docker(dir: String): Listing =
             }
         }
         ...base.dockerSetup()
+        (base.dockerBuild) {
+            with = new Mapping {
+                ["registry"] = "https://ghcr.io"
+                ["username"] = "${{ github.actor }}"
+                ["password"] = "${{ secrets.GITHUB_TOKEN }}"
+            }
+        }
         ...base.dockerBuild(
             new Mapping {
                 ["context"] = dir
