@@ -13,55 +13,34 @@ local dockerPermissions = new Mapping {
     ["packages"] = "write"
 }
 
-local function buildJob(dir: String): Job = new Job {
+local function baseBuildJob(platform: String, login: Step, reference: String): Job = new Job {
     needs = new Listing {
         "version"
         "pkl-versions"
-        "was-updated-\(dir)"
+        "was-updated-\(platform)"
     }
-    `if` = "needs.was-updated-\(dir).outputs.any-changed == 'true'"
+    `if` = "needs.was-updated-\(platform).outputs.any-changed == 'true'"
     strategy = new JobStrategy {
         matrix = "${{fromJson(needs.pkl-versions.outputs.versions)}}"
     }
     permissions = dockerPermissions
     steps = new Listing {
         base.checkout
-        ...base.renderForPlatform(dir, "${{ matrix.version }}")
-        ...docker(dir)
-    }
-}
-
-local function docker(dir: String): Listing =
-    new Listing {
-        ...base.buildArgsForPlatform(dir, "${{ matrix.version }}")
-        new CommandStep {
-            name = "Lowercase repository name"
-            run = """
-            echo "REPOSITORY_LC=${REPOSITORY,,}" >> ${GITHUB_ENV}
-            """
-            env = new Mapping {
-                ["REPOSITORY"] = "${{ github.repository }}"
-            }
-        }
+        ...base.renderForPlatform(platform, "${{ matrix.version }}")
+        ...base.buildArgsForPlatform(platform, "${{ matrix.version }}")
         ...base.dockerSetup()
-        (base.dockerBuild) {
-            with = new Mapping {
-                ["registry"] = "https://ghcr.io"
-                ["username"] = "${{ github.actor }}"
-                ["password"] = "${{ secrets.GITHUB_TOKEN }}"
-            }
-        }
+        login
         ...base.dockerBuild(
             new Mapping {
-                ["context"] = dir
+                ["context"] = platform
                 ["platforms"] = "linux/amd64,linux/arm64/v8"
                 ["push"] = true
                 ["tags"] = """
-                ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}
-                ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-nightly
-                ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
-                ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.version }}
-                ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.major }}
+                \(reference):${{ matrix.version }}
+                \(reference):${{ matrix.version }}-nightly
+                \(reference):${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
+                \(reference):${{ matrix.version }}-${{ needs.version.outputs.version }}
+                \(reference):${{ matrix.version }}-${{ needs.version.outputs.major }}
                 """
                 ["build-args"] = "${{ env.BUILD_ARGS }}"
             },
@@ -69,19 +48,34 @@ local function docker(dir: String): Listing =
         )
         ...base.dockerBuild(
             new Mapping {
-                ["context"] = dir
+                ["context"] = platform
                 ["platforms"] = "linux/amd64,linux/arm64/v8"
                 ["push"] = true
                 ["tags"] = """
-                ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-nightly
-                ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
-                ghcr.io/${{ env.REPOSITORY_LC }}-\(dir):${{ matrix.version }}-${{ needs.version.outputs.version }}
+                \(reference):${{ matrix.version }}-nightly
+                \(reference):${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
+                \(reference):${{ matrix.version }}-${{ needs.version.outputs.version }}
                 """
                 ["build-args"] = "${{ env.BUILD_ARGS }}"
             },
             "github.ref != 'refs/heads/main'"
         )
-     }
+    }
+}
+
+local function buildJob(platform: String): Mapping<String, Job> = new Mapping {
+    ["build-\(platform)-ghcr"] = baseBuildJob(
+        platform,  
+        (base.dockerBuild) {
+            with = new Mapping {
+                ["registry"] = "https://ghcr.io"
+                ["username"] = "${{ github.actor }}"
+                ["password"] = "${{ secrets.GITHUB_TOKEN }}"
+            }
+        },
+        "${{ vars.LOCAL_DOCKER_REFERENCE }}-\(platform)"
+    )
+}
 
 name = "Build Java, Kotlin, Swift, and PklDoc Docker images"
 
@@ -167,13 +161,13 @@ jobs = new Mapping {
         ["was-updated-\(platform)"] = base.wasUpdated(platform)
     }
     for (platform in base.PLATFORMS) {
-        ["build-\(platform)"] = buildJob(platform)
+        ...buildJob(platform)
     }
     ["update-pkl-actions"] = new Job {
         `if` = "github.ref == 'refs/heads/main' && github.repository_owner == 'emilymclean'"
         needs = new Listing {
             for (platform in base.PLATFORMS) {
-                "build-\(platform)"
+                "build-\(platform)-ghcr"
             }
         }
         strategy = new JobStrategy {

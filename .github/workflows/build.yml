@@ -138,7 +138,7 @@ jobs:
         else
             echo "any_changed=false" >> "$GITHUB_ENV"
         fi
-  build-java:
+  build-java-ghcr:
     permissions:
       contents: read
       packages: write
@@ -172,10 +172,6 @@ jobs:
         engine: mustache
     - name: Make endpoint.sh executable
       run: chmod +x java/entrypoint.sh
-    - name: Lowercase repository name
-      env:
-        REPOSITORY: ${{ github.repository }}
-      run: echo "REPOSITORY_LC=${REPOSITORY,,}" >> ${GITHUB_ENV}
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v3
     - name: Setup Docker Buildx
@@ -194,11 +190,11 @@ jobs:
         platforms: linux/amd64,linux/arm64/v8
         push: true
         tags: |-
-          ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}
-          ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}-nightly
-          ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
-          ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}-${{ needs.version.outputs.version }}
-          ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}-${{ needs.version.outputs.major }}
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-java:${{ matrix.version }}
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-java:${{ matrix.version }}-nightly
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-java:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-java:${{ matrix.version }}-${{ needs.version.outputs.version }}
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-java:${{ matrix.version }}-${{ needs.version.outputs.major }}
         build-args: ${{ env.BUILD_ARGS }}
     - name: Build and push Docker image
       if: github.ref != 'refs/heads/main'
@@ -208,11 +204,11 @@ jobs:
         platforms: linux/amd64,linux/arm64/v8
         push: true
         tags: |-
-          ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}-nightly
-          ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
-          ghcr.io/${{ env.REPOSITORY_LC }}-java:${{ matrix.version }}-${{ needs.version.outputs.version }}
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-java:${{ matrix.version }}-nightly
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-java:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-java:${{ matrix.version }}-${{ needs.version.outputs.version }}
         build-args: ${{ env.BUILD_ARGS }}
-  build-kotlin:
+  build-kotlin-ghcr:
     permissions:
       contents: read
       packages: write
@@ -246,10 +242,6 @@ jobs:
         engine: mustache
     - name: Make endpoint.sh executable
       run: chmod +x kotlin/entrypoint.sh
-    - name: Lowercase repository name
-      env:
-        REPOSITORY: ${{ github.repository }}
-      run: echo "REPOSITORY_LC=${REPOSITORY,,}" >> ${GITHUB_ENV}
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v3
     - name: Setup Docker Buildx
@@ -268,11 +260,11 @@ jobs:
         platforms: linux/amd64,linux/arm64/v8
         push: true
         tags: |-
-          ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}
-          ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}-nightly
-          ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
-          ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}-${{ needs.version.outputs.version }}
-          ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}-${{ needs.version.outputs.major }}
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-kotlin:${{ matrix.version }}
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-kotlin:${{ matrix.version }}-nightly
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-kotlin:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-kotlin:${{ matrix.version }}-${{ needs.version.outputs.version }}
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-kotlin:${{ matrix.version }}-${{ needs.version.outputs.major }}
         build-args: ${{ env.BUILD_ARGS }}
     - name: Build and push Docker image
       if: github.ref != 'refs/heads/main'
@@ -282,11 +274,11 @@ jobs:
         platforms: linux/amd64,linux/arm64/v8
         push: true
         tags: |-
-          ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}-nightly
-          ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
-          ghcr.io/${{ env.REPOSITORY_LC }}-kotlin:${{ matrix.version }}-${{ needs.version.outputs.version }}
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-kotlin:${{ matrix.version }}-nightly
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-kotlin:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-kotlin:${{ matrix.version }}-${{ needs.version.outputs.version }}
         build-args: ${{ env.BUILD_ARGS }}
-  build-doc:
+  build-doc-ghcr:
     permissions:
       contents: read
       packages: write
@@ -320,10 +312,6 @@ jobs:
         engine: mustache
     - name: Make endpoint.sh executable
       run: chmod +x doc/entrypoint.sh
-    - name: Lowercase repository name
-      env:
-        REPOSITORY: ${{ github.repository }}
-      run: echo "REPOSITORY_LC=${REPOSITORY,,}" >> ${GITHUB_ENV}
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v3
     - name: Setup Docker Buildx
@@ -342,11 +330,11 @@ jobs:
         platforms: linux/amd64,linux/arm64/v8
         push: true
         tags: |-
-          ghcr.io/${{ env.REPOSITORY_LC }}-doc:${{ matrix.version }}
-          ghcr.io/${{ env.REPOSITORY_LC }}-doc:${{ matrix.version }}-nightly
-          ghcr.io/${{ env.REPOSITORY_LC }}-doc:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
-          ghcr.io/${{ env.REPOSITORY_LC }}-doc:${{ matrix.version }}-${{ needs.version.outputs.version }}
-          ghcr.io/${{ env.REPOSITORY_LC }}-doc:${{ matrix.version }}-${{ needs.version.outputs.major }}
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-doc:${{ matrix.version }}
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-doc:${{ matrix.version }}-nightly
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-doc:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-doc:${{ matrix.version }}-${{ needs.version.outputs.version }}
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-doc:${{ matrix.version }}-${{ needs.version.outputs.major }}
         build-args: ${{ env.BUILD_ARGS }}
     - name: Build and push Docker image
       if: github.ref != 'refs/heads/main'
@@ -356,11 +344,11 @@ jobs:
         platforms: linux/amd64,linux/arm64/v8
         push: true
         tags: |-
-          ghcr.io/${{ env.REPOSITORY_LC }}-doc:${{ matrix.version }}-nightly
-          ghcr.io/${{ env.REPOSITORY_LC }}-doc:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
-          ghcr.io/${{ env.REPOSITORY_LC }}-doc:${{ matrix.version }}-${{ needs.version.outputs.version }}
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-doc:${{ matrix.version }}-nightly
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-doc:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-doc:${{ matrix.version }}-${{ needs.version.outputs.version }}
         build-args: ${{ env.BUILD_ARGS }}
-  build-swift:
+  build-swift-ghcr:
     permissions:
       contents: read
       packages: write
@@ -420,10 +408,6 @@ jobs:
         }
 
         echo "BUILD_ARGS=$(verlt ${{ matrix.version }} 0.29.0 && echo "SWIFT_VERSION=5.10" || echo "SWIFT_VERSION=6.1.3")" >> $GITHUB_ENV
-    - name: Lowercase repository name
-      env:
-        REPOSITORY: ${{ github.repository }}
-      run: echo "REPOSITORY_LC=${REPOSITORY,,}" >> ${GITHUB_ENV}
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v3
     - name: Setup Docker Buildx
@@ -442,11 +426,11 @@ jobs:
         platforms: linux/amd64,linux/arm64/v8
         push: true
         tags: |-
-          ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}
-          ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}-nightly
-          ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
-          ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}-${{ needs.version.outputs.version }}
-          ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}-${{ needs.version.outputs.major }}
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-swift:${{ matrix.version }}
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-swift:${{ matrix.version }}-nightly
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-swift:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-swift:${{ matrix.version }}-${{ needs.version.outputs.version }}
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-swift:${{ matrix.version }}-${{ needs.version.outputs.major }}
         build-args: ${{ env.BUILD_ARGS }}
     - name: Build and push Docker image
       if: github.ref != 'refs/heads/main'
@@ -456,11 +440,11 @@ jobs:
         platforms: linux/amd64,linux/arm64/v8
         push: true
         tags: |-
-          ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}-nightly
-          ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
-          ghcr.io/${{ env.REPOSITORY_LC }}-swift:${{ matrix.version }}-${{ needs.version.outputs.version }}
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-swift:${{ matrix.version }}-nightly
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-swift:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-swift:${{ matrix.version }}-${{ needs.version.outputs.version }}
         build-args: ${{ env.BUILD_ARGS }}
-  build-go:
+  build-go-ghcr:
     permissions:
       contents: read
       packages: write
@@ -506,10 +490,6 @@ jobs:
         engine: mustache
     - name: Make setup.sh executable
       run: chmod +x go/setup.sh
-    - name: Lowercase repository name
-      env:
-        REPOSITORY: ${{ github.repository }}
-      run: echo "REPOSITORY_LC=${REPOSITORY,,}" >> ${GITHUB_ENV}
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v3
     - name: Setup Docker Buildx
@@ -528,11 +508,11 @@ jobs:
         platforms: linux/amd64,linux/arm64/v8
         push: true
         tags: |-
-          ghcr.io/${{ env.REPOSITORY_LC }}-go:${{ matrix.version }}
-          ghcr.io/${{ env.REPOSITORY_LC }}-go:${{ matrix.version }}-nightly
-          ghcr.io/${{ env.REPOSITORY_LC }}-go:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
-          ghcr.io/${{ env.REPOSITORY_LC }}-go:${{ matrix.version }}-${{ needs.version.outputs.version }}
-          ghcr.io/${{ env.REPOSITORY_LC }}-go:${{ matrix.version }}-${{ needs.version.outputs.major }}
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-go:${{ matrix.version }}
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-go:${{ matrix.version }}-nightly
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-go:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-go:${{ matrix.version }}-${{ needs.version.outputs.version }}
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-go:${{ matrix.version }}-${{ needs.version.outputs.major }}
         build-args: ${{ env.BUILD_ARGS }}
     - name: Build and push Docker image
       if: github.ref != 'refs/heads/main'
@@ -542,17 +522,17 @@ jobs:
         platforms: linux/amd64,linux/arm64/v8
         push: true
         tags: |-
-          ghcr.io/${{ env.REPOSITORY_LC }}-go:${{ matrix.version }}-nightly
-          ghcr.io/${{ env.REPOSITORY_LC }}-go:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
-          ghcr.io/${{ env.REPOSITORY_LC }}-go:${{ matrix.version }}-${{ needs.version.outputs.version }}
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-go:${{ matrix.version }}-nightly
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-go:${{ matrix.version }}-${{ needs.version.outputs.major }}-nightly
+          ${{ vars.LOCAL_DOCKER_REFERENCE }}-go:${{ matrix.version }}-${{ needs.version.outputs.version }}
         build-args: ${{ env.BUILD_ARGS }}
   update-pkl-actions:
     needs:
-    - build-java
-    - build-kotlin
-    - build-doc
-    - build-swift
-    - build-go
+    - build-java-ghcr
+    - build-kotlin-ghcr
+    - build-doc-ghcr
+    - build-swift-ghcr
+    - build-go-ghcr
     if: github.ref == 'refs/heads/main' && github.repository_owner == 'emilymclean'
     runs-on: ubuntu-latest
     strategy:
