@@ -75,6 +75,16 @@ local function buildJob(platform: String): Mapping<String, Job> = new Mapping {
         },
         "${{ vars.LOCAL_DOCKER_REFERENCE }}-\(platform)"
     )
+    ["build-\(platform)-dockerio"] = baseBuildJob(
+        platform,  
+        (base.dockerBuild) {
+            with = new Mapping {
+                ["username"] = "${{ vars.DOCKER_USERNAME }}"
+                ["password"] = "${{ secrets.DOCKER_PAT }}"
+            }
+        },
+        "${{ vars.DOCKER_DOCKER_REFERENCE }}-\(platform)"
+    )
 }
 
 name = "Build Java, Kotlin, Swift, and PklDoc Docker images"
