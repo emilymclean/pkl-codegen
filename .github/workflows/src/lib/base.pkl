@@ -33,9 +33,9 @@ hidden supportedVersionLimit = 10
 
 hidden platformCalls = new Mapping<Platform, String> {
     [PLATFORM_SWIFT] = "LD_LIBRARY_PATH=/usr/share/swift/usr/lib/swift/linux PATH=$PATH:/usr/share/swift/usr/bin/ /pkl-gen-swift"
-    [PLATFORM_KOTLIN] = "java -cp /pklgen.jar org.pkl.codegen.kotlin.Main"
-    [PLATFORM_JAVA] = "java -cp /pklgen.jar org.pkl.codegen.java.Main"
-    [PLATFORM_PKLDOC] = "java -cp /pklgen.jar org.pkl.doc.Main"
+    [PLATFORM_KOTLIN] = "/pkl-codegen-kotlin"
+    [PLATFORM_JAVA] = "/pkl-codegen-java"
+    [PLATFORM_PKLDOC] = "/jpkldoc"
 }
 
 hidden checkout = new ActionStep {
@@ -138,20 +138,6 @@ function renderForPlatform(platform: Platform, version: String): Listing<Step> =
             run = "chmod +x \(platform)/setup.sh"
         }
     else null
-    if (!List(PLATFORM_GO, PLATFORM_SWIFT).contains(platform))
-        new ActionStep {
-            name = "Render build.template.gradle"
-            uses = RENDER_TEMPLATE_ACTION
-            env = new Mapping {
-                ["pkl_version"] = version
-            }
-            with = new Mapping {
-                ["template-file"] = "\(platform)/project/build.template.gradle"
-                ["output-file"] = "\(platform)/project/build.gradle"
-                ["engine"] = "mustache"
-            }
-        }
-    else null
     if (platform != PLATFORM_GO)
         new ActionStep {
             name = "Render endpoint.sh"
@@ -181,7 +167,19 @@ function buildArgsForPlatform(platform: Platform, version: String): Listing<Step
             run = """
             \(VERLTE)
 
-            echo "BUILD_ARGS=$(verlt \(version) 0.29.0 && echo "SWIFT_VERSION=5.10" || echo "SWIFT_VERSION=6.1.3")" >> $GITHUB_ENV
+            echo "BUILD_ARGS=SWIFT_VERSION=6.1.3" >> $GITHUB_ENV
+            """
+        }
+    else null
+    if (
+        platform == PLATFORM_JAVA ||
+        platform == PLATFORM_KOTLIN ||
+        platform == PLATFORM_PKLDOC
+    )
+        new CommandStep {
+            name = "Set tool version"
+            run = """
+            echo "BUILD_ARGS=TOOL_VERSION=\(version)" >> $GITHUB_ENV
             """
         }
     else null
@@ -210,18 +208,16 @@ function testPlatform(platform: String, version: String, upload: Boolean): Job =
         ...renderForPlatform(platform, version)
         ...buildArgsForPlatform(platform, version)
         ...dockerSetup()
-        ...dockerBuild(
-            new Mapping {
-                ["context"] = platform
-                ["platforms"] = "linux/amd64"
-                ["load"] = true
-                ["tags"] = """
-                test/\(platform):latest
-                """
-                ["build-args"] = "${{ env.BUILD_ARGS }}"
-            },
-            null
-        )
+        if (platform == PLATFORM_SWIFT)
+            new CommandStep {
+                name = "Build Docker image"
+                run = "docker buildx build \(platform)/ --build-arg ${{ env.BUILD_ARGS }} -t test/\(platform):latest --load"
+            }
+        else
+            new CommandStep {
+                name = "Build Docker image"
+                run = "docker buildx build \(platform)/ -t test/\(platform):latest --load"
+            }
         ...new Listing {
             if (platform == PLATFORM_PKLDOC)
                 new CommandStep {

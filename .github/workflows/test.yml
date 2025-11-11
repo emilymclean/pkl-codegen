@@ -32,17 +32,9 @@ jobs:
       run: |-
         mapfile -t pklversions < "pkl-versions"
         echo "PKL_VERSION=${pklversions[-1]}" >> $GITHUB_ENV
-    - name: Render build.template.gradle
-      env:
-        pkl_version: ${{ matrix.version }}
-      uses: emilymclean/template-render-action@v1.0.2
-      with:
-        template-file: java/project/build.template.gradle
-        output-file: java/project/build.gradle
-        engine: mustache
     - name: Render endpoint.sh
       env:
-        call: java -cp /pklgen.jar org.pkl.codegen.java.Main
+        call: /pkl-codegen-java
       uses: emilymclean/template-render-action@v1.0.2
       with:
         template-file: templates/entrypoint.template.sh
@@ -50,6 +42,8 @@ jobs:
         engine: mustache
     - name: Make endpoint.sh executable
       run: chmod +x java/entrypoint.sh
+    - name: Set tool version
+      run: echo "BUILD_ARGS=TOOL_VERSION=${{ matrix.version }}" >> $GITHUB_ENV
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v3
     - name: Setup Docker Buildx
@@ -60,14 +54,8 @@ jobs:
         registry: https://ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v6
-      with:
-        context: java
-        platforms: linux/amd64
-        load: true
-        tags: test/java:latest
-        build-args: ${{ env.BUILD_ARGS }}
+    - name: Build Docker image
+      run: docker buildx build java/ -t test/java:latest --load
     - name: Generate and test
       run: |-
         set -e
@@ -107,17 +95,9 @@ jobs:
       run: |-
         mapfile -t pklversions < "pkl-versions"
         echo "PKL_VERSION=${pklversions[-1]}" >> $GITHUB_ENV
-    - name: Render build.template.gradle
-      env:
-        pkl_version: ${{ matrix.version }}
-      uses: emilymclean/template-render-action@v1.0.2
-      with:
-        template-file: kotlin/project/build.template.gradle
-        output-file: kotlin/project/build.gradle
-        engine: mustache
     - name: Render endpoint.sh
       env:
-        call: java -cp /pklgen.jar org.pkl.codegen.kotlin.Main
+        call: /pkl-codegen-kotlin
       uses: emilymclean/template-render-action@v1.0.2
       with:
         template-file: templates/entrypoint.template.sh
@@ -125,6 +105,8 @@ jobs:
         engine: mustache
     - name: Make endpoint.sh executable
       run: chmod +x kotlin/entrypoint.sh
+    - name: Set tool version
+      run: echo "BUILD_ARGS=TOOL_VERSION=${{ matrix.version }}" >> $GITHUB_ENV
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v3
     - name: Setup Docker Buildx
@@ -135,14 +117,8 @@ jobs:
         registry: https://ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v6
-      with:
-        context: kotlin
-        platforms: linux/amd64
-        load: true
-        tags: test/kotlin:latest
-        build-args: ${{ env.BUILD_ARGS }}
+    - name: Build Docker image
+      run: docker buildx build kotlin/ -t test/kotlin:latest --load
     - name: Generate and test
       run: |-
         set -e
@@ -182,17 +158,9 @@ jobs:
       run: |-
         mapfile -t pklversions < "pkl-versions"
         echo "PKL_VERSION=${pklversions[-1]}" >> $GITHUB_ENV
-    - name: Render build.template.gradle
-      env:
-        pkl_version: ${{ matrix.version }}
-      uses: emilymclean/template-render-action@v1.0.2
-      with:
-        template-file: doc/project/build.template.gradle
-        output-file: doc/project/build.gradle
-        engine: mustache
     - name: Render endpoint.sh
       env:
-        call: java -cp /pklgen.jar org.pkl.doc.Main
+        call: /jpkldoc
       uses: emilymclean/template-render-action@v1.0.2
       with:
         template-file: templates/entrypoint.template.sh
@@ -200,6 +168,8 @@ jobs:
         engine: mustache
     - name: Make endpoint.sh executable
       run: chmod +x doc/entrypoint.sh
+    - name: Set tool version
+      run: echo "BUILD_ARGS=TOOL_VERSION=${{ matrix.version }}" >> $GITHUB_ENV
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v3
     - name: Setup Docker Buildx
@@ -210,14 +180,8 @@ jobs:
         registry: https://ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v6
-      with:
-        context: doc
-        platforms: linux/amd64
-        load: true
-        tags: test/doc:latest
-        build-args: ${{ env.BUILD_ARGS }}
+    - name: Build Docker image
+      run: docker buildx build doc/ -t test/doc:latest --load
     - name: Generate and test
       run: |-
         set -e
@@ -300,7 +264,7 @@ jobs:
             [ "$1" = "$2" ] && return 1 || verlte $1 $2
         }
 
-        echo "BUILD_ARGS=$(verlt ${{ matrix.version }} 0.29.0 && echo "SWIFT_VERSION=5.10" || echo "SWIFT_VERSION=6.1.3")" >> $GITHUB_ENV
+        echo "BUILD_ARGS=SWIFT_VERSION=6.1.3" >> $GITHUB_ENV
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v3
     - name: Setup Docker Buildx
@@ -311,14 +275,8 @@ jobs:
         registry: https://ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v6
-      with:
-        context: swift
-        platforms: linux/amd64
-        load: true
-        tags: test/swift:latest
-        build-args: ${{ env.BUILD_ARGS }}
+    - name: Build Docker image
+      run: docker buildx build swift/ --build-arg ${{ env.BUILD_ARGS }} -t test/swift:latest --load
     - name: Generate and test
       run: |-
         set -e
@@ -398,14 +356,8 @@ jobs:
         registry: https://ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v6
-      with:
-        context: go
-        platforms: linux/amd64
-        load: true
-        tags: test/go:latest
-        build-args: ${{ env.BUILD_ARGS }}
+    - name: Build Docker image
+      run: docker buildx build go/ -t test/go:latest --load
     - name: Generate and test
       run: |-
         docker run --rm -v "./test-data/:/data" test/go:latest /data/example.pkl --mapping example=github.com/emilymclean/pkl-codegen/example --output-path /data/newstyle-out
