@@ -401,7 +401,7 @@ jobs:
             [ "$1" = "$2" ] && return 1 || verlte $1 $2
         }
 
-        echo "BUILD_ARGS=$(verlt ${{ matrix.version }} 0.29.0 && echo "SWIFT_VERSION=5.10" || echo "SWIFT_VERSION=6.1.3")" >> $GITHUB_ENV
+        echo "BUILD_ARGS=SWIFT_VERSION=6.1.3" >> $GITHUB_ENV
     - name: Lowercase repository name
       env:
         REPOSITORY: ${{ github.repository }}

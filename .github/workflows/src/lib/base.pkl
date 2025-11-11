@@ -167,7 +167,7 @@ function buildArgsForPlatform(platform: Platform, version: String): Listing<Step
             run = """
             \(VERLTE)
 
-            echo "BUILD_ARGS=$(verlt \(version) 0.29.0 && echo "SWIFT_VERSION=5.10" || echo "SWIFT_VERSION=6.1.3")" >> $GITHUB_ENV
+            echo "BUILD_ARGS=SWIFT_VERSION=6.1.3" >> $GITHUB_ENV
             """
         }
     else null
