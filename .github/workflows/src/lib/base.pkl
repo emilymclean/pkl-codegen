@@ -33,9 +33,9 @@ hidden supportedVersionLimit = 10
 
 hidden platformCalls = new Mapping<Platform, String> {
     [PLATFORM_SWIFT] = "LD_LIBRARY_PATH=/usr/share/swift/usr/lib/swift/linux PATH=$PATH:/usr/share/swift/usr/bin/ /pkl-gen-swift"
-    [PLATFORM_KOTLIN] = "java -cp /pklgen.jar org.pkl.codegen.kotlin.Main"
-    [PLATFORM_JAVA] = "java -cp /pklgen.jar org.pkl.codegen.java.Main"
-    [PLATFORM_PKLDOC] = "java -cp /pklgen.jar org.pkl.doc.Main"
+    [PLATFORM_KOTLIN] = "/pkl-codegen-kotlin"
+    [PLATFORM_JAVA] = "/pkl-codegen-java"
+    [PLATFORM_PKLDOC] = "/jpkldoc"
 }
 
 hidden checkout = new ActionStep {

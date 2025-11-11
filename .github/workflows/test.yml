@@ -42,7 +42,7 @@ jobs:
         engine: mustache
     - name: Render endpoint.sh
       env:
-        call: java -cp /pklgen.jar org.pkl.codegen.java.Main
+        call: /pkl-codegen-java
       uses: emilymclean/template-render-action@v1.0.2
       with:
         template-file: templates/entrypoint.template.sh
@@ -111,7 +111,7 @@ jobs:
         engine: mustache
     - name: Render endpoint.sh
       env:
-        call: java -cp /pklgen.jar org.pkl.codegen.kotlin.Main
+        call: /pkl-codegen-kotlin
       uses: emilymclean/template-render-action@v1.0.2
       with:
         template-file: templates/entrypoint.template.sh
@@ -180,7 +180,7 @@ jobs:
         engine: mustache
     - name: Render endpoint.sh
       env:
-        call: java -cp /pklgen.jar org.pkl.doc.Main
+        call: /jpkldoc
       uses: emilymclean/template-render-action@v1.0.2
       with:
         template-file: templates/entrypoint.template.sh
