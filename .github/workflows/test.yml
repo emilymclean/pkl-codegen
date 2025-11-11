@@ -32,14 +32,6 @@ jobs:
       run: |-
         mapfile -t pklversions < "pkl-versions"
         echo "PKL_VERSION=${pklversions[-1]}" >> $GITHUB_ENV
-    - name: Render build.template.gradle
-      env:
-        pkl_version: ${{ matrix.version }}
-      uses: emilymclean/template-render-action@v1.0.2
-      with:
-        template-file: java/project/build.template.gradle
-        output-file: java/project/build.gradle
-        engine: mustache
     - name: Render endpoint.sh
       env:
         call: /pkl-codegen-java
@@ -50,6 +42,8 @@ jobs:
         engine: mustache
     - name: Make endpoint.sh executable
       run: chmod +x java/entrypoint.sh
+    - name: Set tool version
+      run: echo "BUILD_ARGS=TOOL_VERSION=${{ matrix.version }}" >> $GITHUB_ENV
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v3
     - name: Setup Docker Buildx
@@ -101,14 +95,6 @@ jobs:
       run: |-
         mapfile -t pklversions < "pkl-versions"
         echo "PKL_VERSION=${pklversions[-1]}" >> $GITHUB_ENV
-    - name: Render build.template.gradle
-      env:
-        pkl_version: ${{ matrix.version }}
-      uses: emilymclean/template-render-action@v1.0.2
-      with:
-        template-file: kotlin/project/build.template.gradle
-        output-file: kotlin/project/build.gradle
-        engine: mustache
     - name: Render endpoint.sh
       env:
         call: /pkl-codegen-kotlin
@@ -119,6 +105,8 @@ jobs:
         engine: mustache
     - name: Make endpoint.sh executable
       run: chmod +x kotlin/entrypoint.sh
+    - name: Set tool version
+      run: echo "BUILD_ARGS=TOOL_VERSION=${{ matrix.version }}" >> $GITHUB_ENV
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v3
     - name: Setup Docker Buildx
@@ -170,14 +158,6 @@ jobs:
       run: |-
         mapfile -t pklversions < "pkl-versions"
         echo "PKL_VERSION=${pklversions[-1]}" >> $GITHUB_ENV
-    - name: Render build.template.gradle
-      env:
-        pkl_version: ${{ matrix.version }}
-      uses: emilymclean/template-render-action@v1.0.2
-      with:
-        template-file: doc/project/build.template.gradle
-        output-file: doc/project/build.gradle
-        engine: mustache
     - name: Render endpoint.sh
       env:
         call: /jpkldoc
@@ -188,6 +168,8 @@ jobs:
         engine: mustache
     - name: Make endpoint.sh executable
       run: chmod +x doc/entrypoint.sh
+    - name: Set tool version
+      run: echo "BUILD_ARGS=TOOL_VERSION=${{ matrix.version }}" >> $GITHUB_ENV
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v3
     - name: Setup Docker Buildx
