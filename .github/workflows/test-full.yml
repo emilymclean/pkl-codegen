@@ -105,17 +105,9 @@ jobs:
       run: |-
         mapfile -t pklversions < "pkl-versions"
         echo "PKL_VERSION=${pklversions[-1]}" >> $GITHUB_ENV
-    - name: Render build.template.gradle
-      env:
-        pkl_version: ${{ matrix.version }}
-      uses: emilymclean/template-render-action@v1.0.2
-      with:
-        template-file: java/project/build.template.gradle
-        output-file: java/project/build.gradle
-        engine: mustache
     - name: Render endpoint.sh
       env:
-        call: java -cp /pklgen.jar org.pkl.codegen.java.Main
+        call: /pkl-codegen-java
       uses: emilymclean/template-render-action@v1.0.2
       with:
         template-file: templates/entrypoint.template.sh
@@ -123,6 +115,8 @@ jobs:
         engine: mustache
     - name: Make endpoint.sh executable
       run: chmod +x java/entrypoint.sh
+    - name: Set tool version
+      run: echo "BUILD_ARGS=TOOL_VERSION=${{ matrix.version }}" >> $GITHUB_ENV
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v3
     - name: Setup Docker Buildx
@@ -176,17 +170,9 @@ jobs:
       run: |-
         mapfile -t pklversions < "pkl-versions"
         echo "PKL_VERSION=${pklversions[-1]}" >> $GITHUB_ENV
-    - name: Render build.template.gradle
-      env:
-        pkl_version: ${{ matrix.version }}
-      uses: emilymclean/template-render-action@v1.0.2
-      with:
-        template-file: kotlin/project/build.template.gradle
-        output-file: kotlin/project/build.gradle
-        engine: mustache
     - name: Render endpoint.sh
       env:
-        call: java -cp /pklgen.jar org.pkl.codegen.kotlin.Main
+        call: /pkl-codegen-kotlin
       uses: emilymclean/template-render-action@v1.0.2
       with:
         template-file: templates/entrypoint.template.sh
@@ -194,6 +180,8 @@ jobs:
         engine: mustache
     - name: Make endpoint.sh executable
       run: chmod +x kotlin/entrypoint.sh
+    - name: Set tool version
+      run: echo "BUILD_ARGS=TOOL_VERSION=${{ matrix.version }}" >> $GITHUB_ENV
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v3
     - name: Setup Docker Buildx
@@ -247,17 +235,9 @@ jobs:
       run: |-
         mapfile -t pklversions < "pkl-versions"
         echo "PKL_VERSION=${pklversions[-1]}" >> $GITHUB_ENV
-    - name: Render build.template.gradle
-      env:
-        pkl_version: ${{ matrix.version }}
-      uses: emilymclean/template-render-action@v1.0.2
-      with:
-        template-file: doc/project/build.template.gradle
-        output-file: doc/project/build.gradle
-        engine: mustache
     - name: Render endpoint.sh
       env:
-        call: java -cp /pklgen.jar org.pkl.doc.Main
+        call: /jpkldoc
       uses: emilymclean/template-render-action@v1.0.2
       with:
         template-file: templates/entrypoint.template.sh
@@ -265,6 +245,8 @@ jobs:
         engine: mustache
     - name: Make endpoint.sh executable
       run: chmod +x doc/entrypoint.sh
+    - name: Set tool version
+      run: echo "BUILD_ARGS=TOOL_VERSION=${{ matrix.version }}" >> $GITHUB_ENV
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v3
     - name: Setup Docker Buildx
@@ -361,7 +343,7 @@ jobs:
             [ "$1" = "$2" ] && return 1 || verlte $1 $2
         }
 
-        echo "BUILD_ARGS=$(verlt ${{ matrix.version }} 0.29.0 && echo "SWIFT_VERSION=5.10" || echo "SWIFT_VERSION=6.1.3")" >> $GITHUB_ENV
+        echo "BUILD_ARGS=SWIFT_VERSION=6.1.3" >> $GITHUB_ENV
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v3
     - name: Setup Docker Buildx
