@@ -1,4 +1,4 @@
-FROM golang:1.24.2-bullseye AS builder
+FROM golang:1.25.5-trixie AS builder
 
 RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -yqq curl
@@ -7,7 +7,7 @@ COPY setup.sh /setup.sh
 RUN /setup.sh && \
         rm -rf /setup.sh
 
-FROM golang:1.24.2-bullseye
+FROM golang:1.25.5-trixie
 
 COPY --from=builder /usr/local/bin/pkl /usr/local/bin/pkl
 
