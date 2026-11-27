@@ -1,7 +1,7 @@
 # pkl-codegen
 A collection of docker images to generate code bindings for pkl models (in either Swift, Java, or Kotlin). Also supports PklDoc generation.
 
-Current builds are created for pkl version 0.29.0, 0.29.1, 0.30.0, 0.30.1, 0.30.2, 0.31.0, 0.31.1, 0.32.0, 0.32.1 and 0.33.0.
+Current builds are created for pkl version 0.29.1, 0.30.0, 0.30.1, 0.30.2, 0.31.0, 0.31.1, 0.32.0, 0.32.1, 0.32.2 and 0.33.0.
 
 ## Usage
 Given an input model of `example.pkl`, you can generate a code binding for a selected platform and pkl version using the following command:
